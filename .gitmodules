@@ -1,3 +1,6 @@
 [submodule "apps/heimdall"]
 	path = apps/heimdall
 	url = https://github.com/meow-software/heimdall/
+[submodule "apps/echo"]
+	path = apps/echo
+	url = https://github.com/meow-software/echo
