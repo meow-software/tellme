@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",  // Specifies the output directory for compiled files.
+    "module": "CommonJS",  // Sets the module system to CommonJS (for Node.js compatibility).
+    "target": "ESNext",  // Specifies the target JavaScript version. ESNext is the latest version.
+    "declaration": true,  // Generates corresponding `.d.ts` declaration files for TypeScript types.
+    "declarationMap": true,  // Generates source maps for declaration files, useful for debugging.
+    "sourceMap": true,  // Generates source maps for JavaScript files, enabling debugging.
+    "strict": true,  // Enables all strict type-checking options (e.g., no `any` type).
+    "esModuleInterop": true,  // Ensures compatibility between CommonJS and ES Modules.
+    "skipLibCheck": true,  // Skips type checking of declaration files in node_modules, improving build performance.
+    "noImplicitAny": false,  // Allows the use of `any` type in cases where no type is inferred (helps with third-party libraries).
+    "resolveJsonModule": true,  // Allows importing JSON files as modules.
+    "experimentalDecorators": true,  // Enables support for experimental decorators in TypeScript.
+    "emitDecoratorMetadata": true,  // Enables the generation of metadata for decorators, necessary for NestJS.
+    "moduleResolution": "node"  // Specifies how modules get resolved. "node" is for Node.js module resolution.
+ 
+  },
+  "include": ["index.ts"]  // Specifies the files or directories to be included in the compilation process.
+}

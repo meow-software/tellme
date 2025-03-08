@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@tellme/shared": [
+        "packages/shared/*",
+        "node_modules/@tellme/shared"
+      ],
+      // For typescript completion
+      "@tellme/common": [
+        "packages/common/*",
+        "node_modules/@tellme/common"
+      ]
+    }
+  }
+}
