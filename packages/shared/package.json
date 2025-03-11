@@ -4,7 +4,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "npm run build --workspace=@tellme/shared",
+    "dev": "powershell -Command \"Remove-Item -Recurse -Force ./dist\" && npm run build --workspace=@tellme/shared",
+    "devl": "rm -r ./dist/ && npm run build --workspace=@tellme/shared",
     "build": "tsc",
     "watch": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -29,6 +30,7 @@
     "snowflake-id": "^1.1.0"
   },
   "devDependencies": {
-    "@types/glob": "^8.1.0"
+    "@types/glob": "^8.1.0",
+    "prisma": "^6.4.1"
   }
 }
