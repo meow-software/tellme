@@ -1,6 +1,7 @@
 import { OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { KafkaMessage, EachMessagePayload, Kafka, Consumer } from 'kafkajs';
 import { IKafkaEventHandler } from "./kafka-handler.interface";
+import { registerEventHandlers } from '@tellme/common';
 
 /**
  * Interface for a Kafka consumer.
@@ -8,6 +9,7 @@ import { IKafkaEventHandler } from "./kafka-handler.interface";
  */
 export interface IKafkaConsumer extends OnModuleInit, OnModuleDestroy {
 
+  
   /**
    * Connects to the Kafka server.
    * @async
@@ -23,12 +25,12 @@ export interface IKafkaConsumer extends OnModuleInit, OnModuleDestroy {
   disconnect(): Promise<void>;
 
   /**
-   * Subscribes to a Kafka event handler.
-   * @param {IKafkaEventHandler} handler - The event handler instance to subscribe to.
+   * Registe to a Kafka event handler.
+   * @param {IKafkaEventHandler} handler - The event handler instance to register.
    * @async
-   * @returns {Promise<void>} - The promise resolved when the handler is successfully subscribed.
+   * @returns {Promise<void>} - The promise resolved when the handler is successfully register.
    */
-  subscribeToHandler(handler: IKafkaEventHandler): Promise<void>;
+  registerEventHandlers(handler: IKafkaEventHandler): Promise<void>;
 
   /**
    * Runs the Kafka consumer to start consuming messages.
@@ -58,6 +60,8 @@ export interface IKafkaConsumer extends OnModuleInit, OnModuleDestroy {
   getClient(): Kafka;
 
   getHandlers(): IKafkaEventHandler[];
+  
+  setMapEventHandlers(eventType: string, handler: Function): void;
 }
 
 
@@ -73,6 +77,8 @@ export abstract class AbstractKafkaConsumer implements IKafkaConsumer {
   protected consumer: Consumer;
   protected client: Kafka;
   protected handlers: IKafkaEventHandler[] = [];
+  protected mapEventHandlers = new Map<string, Function>();
+
   /**
      * Instantiates a Kafka consumer.
      * 
@@ -90,24 +96,39 @@ export abstract class AbstractKafkaConsumer implements IKafkaConsumer {
   async onModuleDestroy() {
     await this.disconnect();
   }
+
+  async setMapEventHandlers(eventType: string, handler: Function) {
+    this.mapEventHandlers.set(eventType, handler);
+    // console.log(`KafkaConsumer - Registered event: ${eventType} -> ${handler}`);
+  }
+
   /**
-     * Subscribes an event handler to a specific Kafka event type (topics).
+     * Register an event handler to a specific Kafka event type (topics).
      * 
      * @param {IKafkaEventHandler} handler - The event handler instance.
      * @async
-     * @returns {Promise<void>} - Promise resolved once the handler is successfully subscribed.
+     * @returns {Promise<void>} - Promise resolved once the handler is successfully registered.
      */
-  async subscribeToHandler(handler: IKafkaEventHandler) {
+  async registerEventHandlers(handler: IKafkaEventHandler) {
     this.handlers.push(handler);
-    await this.consumer.subscribe({ topic: handler.eventType as string });
+    registerEventHandlers(handler, this);
   }
   /**
-     * Runs the Kafka consumer to consume messages from subscribed topics.
+     * Subscribe topics and runs the Kafka consumer to consume messages from subscribed topics.
      * 
      * @async
      * @returns {Promise<void>} - Promise resolved once the consumer is running.
      */
   async run() {
+    // Subscribe event kafka
+    if (this.mapEventHandlers.size > 0) {
+      const topics = Array.from(this.mapEventHandlers.keys());
+      // console.log('-- Subscribing to topics:', topics);
+      await this.consumer.subscribe({ topics, fromBeginning: true });
+    }else{
+      console.warn('No event handlers registered. Consumer will not subscribe to any topics.');
+    }
+    // Run the consumer
     await this.consumer.run({
       eachMessage: async (eachMessage) => {
         this.consumeMessage(eachMessage.topic, eachMessage.message, eachMessage);
@@ -121,11 +142,12 @@ export abstract class AbstractKafkaConsumer implements IKafkaConsumer {
      * @param {KafkaMessage} message - The Kafka message to consume.
      * @param {EachMessagePayload} [eachMessage] - Additional metadata about the message.
      */
-  public consumeMessage(event: string, message: KafkaMessage, eachMessage?: EachMessagePayload): void {
-    const handler = this.handlers.find(h => h.eventType as string === event);
-
-    if (handler) {
-      handler.handleEvent(this.fromKafkaMessageToObj(message).value);
+  async consumeMessage(event: string, message: KafkaMessage, eachMessage?: EachMessagePayload): Promise<void> {
+    const handleEvent = this.mapEventHandlers.get(event);
+    if (handleEvent) {
+      await handleEvent(this.fromKafkaMessageToObj(message).value);
+    } else {
+      console.warn(`No handler found for Kafka event: ${handleEvent}`);
     }
   }
 

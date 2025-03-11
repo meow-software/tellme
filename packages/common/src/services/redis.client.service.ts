@@ -4,9 +4,9 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RedisClientService implements OnApplicationShutdown{
-    private redis: Redis;
+    protected redis: Redis;
 
-    constructor(private readonly configService: ConfigService) {
+    constructor(protected readonly configService: ConfigService) {
         const redisUrl = this.configService.get<string>('REDIS_URL', "");
         this.redis = new Redis(redisUrl);
     }

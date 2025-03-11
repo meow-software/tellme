@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { Injectable } from '@nestjs/common';
+import { IWebsocketGateway } from '@tellme/common';
 
 /**
  * Interface for WebSocket handlers.
@@ -7,32 +7,18 @@ import { Injectable } from '@nestjs/common';
  */
 export interface IBaseWebsocketHandler {
   /**
-   * Event for resource creation.
-   */
-  getCreateEvent(): string;
-
-  /**
-   * Event for resource updates.
-   */
-  getUpdateEvent(): string;
-
-  /**
-   * Event for resource deletion.
-   */
-  getDeleteEvent(): string;
-
-  /**
-   * WebSocket server instance.
+   * Gets the WebSocket server instance.
+   * 
+   * @returns {Server} - The WebSocket server instance.
    */
   getServer(): Server;
 
   /**
-   * Registers WebSocket event handlers.
-   * Automatically maps events to their corresponding methods.
+   * Sets the WebSocket server instance.
    * 
-   * @param server - The WebSocket server instance.
+   * @param {Server} server - The WebSocket server instance to set.
    */
-  registerHandlers(server: Server): void;
+  setServer(server: Server): void;
 
   /**
    * Emits an event to all connected clients.
@@ -51,107 +37,33 @@ export interface IBaseWebsocketHandler {
    */
   emitToRoom(room: string, event: string, payload: any): void;
 
-  /**
-   * Emits an event to a specific client.
-   * 
-   * @param client - The target client socket.
-   * @param event - The event name to emit.
-   * @param payload - The data to send with the event.
-   */
-  emitToClient(client: Socket, event: string, payload: any): void;
-
-  /**
-   * Handles resource creation.
-   * Must be implemented by child classes.
-   * 
-   * @param server - The WebSocket server instance.
-   * @param client - The client socket making the request.
-   * @param payload - The data required to create the resource.
-   */
-  create(server: Server, client: Socket, payload: any): void;
-
-  /**
-   * Handles resource updates.
-   * Must be implemented by child classes.
-   * 
-   * @param server - The WebSocket server instance.
-   * @param client - The client socket making the request.
-   * @param payload - The data required to update the resource.
-   */
-  update(server: Server, client: Socket, payload: any): void;
-
-  /**
-   * Handles resource deletion.
-   * Must be implemented by child classes.
-   * 
-   * @param server - The WebSocket server instance.
-   * @param client - The client socket making the request.
-   * @param payload - The data required to delete the resource.
-   */
-  delete(server: Server, client: Socket, payload: any): void;
 }
 
 /**
  * Abstract base class for WebSocket handlers.
- * Provides common functionality and enforces a consistent structure for all handlers.
+ * Provides common functionality and enforces a consistent structure for all websoket handlers.
  */
-export abstract class BaseWebsocketHandler implements IBaseWebsocketHandler{
-  /**
-   * Event for resource creation.
-   */
-  protected createEvent!: string;
-
-  /**
-   * Event for resource updates.
-   */
-  protected updateEvent!: string;
-
-  /**
-   * Event for resource deletion.
-   */
-  protected deleteEvent!: string;
-
+export abstract class BaseWebsocketHandler implements IBaseWebsocketHandler {
   protected server!: Server;
 
-  getCreateEvent(): string {
-    return this.createEvent;
-  }
-
-  getUpdateEvent(): string {
-    return this.updateEvent;
-  }
-
-  getDeleteEvent(): string {
-    return this.deleteEvent;
-  }
-
+  /**
+   * Gets the WebSocket server instance.
+   * 
+   * @returns {Server} - The WebSocket server instance.
+   */
   getServer(): Server {
     return this.server;
   }
 
   /**
-   * Registers WebSocket event handlers.
-   * This implementation automatically maps events to their corresponding methods.
-   * @param server - The WebSocket server instance.
+   * Sets the WebSocket server instance.
+   * 
+   * @param {Server} server - The WebSocket server instance to set.
    */
-  registerHandlers(server: Server): void {
+  setServer(server: Server): void {
     this.server = server;
-    server.on('connection', (client: Socket) => {
-      // Automatically register event listeners based on the defined events
-      if (this.createEvent) {
-        client.on(this.createEvent , (payload: any) => this.create(server, client, payload));
-      }
-
-      if (this.updateEvent) {
-        client.on(this.updateEvent , (payload: any) => this.update(server, client, payload));
-      }
-
-      if (this.deleteEvent) {
-        client.on(this.deleteEvent , (payload: any) => this.delete(server, client, payload));
-      }
-
-    });
   }
+
 
   /**
    * Emits an event to all connected clients.
@@ -183,30 +95,96 @@ export abstract class BaseWebsocketHandler implements IBaseWebsocketHandler{
     client.emit(event, payload);
   }
 
-  /**
-   * Abstract method for handling resource creation.
-   * Must be implemented by child classes.
-   * @param server - The WebSocket server instance.
-   * @param client - The client socket making the request.
-   * @param payload - The data required to create the resource.
-   */
-  abstract create(server: Server, client: Socket, payload: any): void;
+}
 
-  /**
-   * Abstract method for handling resource updates.
-   * Must be implemented by child classes.
-   * @param server - The WebSocket server instance.
-   * @param client - The client socket making the request.
-   * @param payload - The data required to update the resource.
-   */
-  abstract update(server: Server, client: Socket, payload: any): void;
+/**
+ * Decorator to register a WebSocket event handler.
+ * 
+ * This decorator attaches metadata to a method, linking it to a WebSocket event type.
+ * The metadata can later be used to dynamically register the event handler.
+ * 
+ * @param {string} eventType - The WebSocket event name that the method should handle.
+ * @returns {MethodDecorator} - A method decorator that stores the event type.
+ */
+export function OnWebsocketEventHandler(eventType: string): MethodDecorator {
+  return (target, propertyKey, descriptor) => {
+    // Store event type metadata on the method for later retrieval
+    Reflect.defineMetadata('websocket:eventType', eventType, target.constructor.prototype, propertyKey);
+  };
+}
 
-  /**
-   * Abstract method for handling resource deletion.
-   * Must be implemented by child classes.
-   * @param server - The WebSocket server instance.
-   * @param client - The client socket making the request.
-   * @param payload - The data required to delete the resource.
-   */
-  abstract delete(server: Server, client: Socket, payload: any): void;
+
+/**
+ * Registers WebSocket event handlers from a given handler class.
+ * 
+ * This function scans the methods of a WebSocket handler class and registers them 
+ * in the gateway's event handler map based on their associated event types.
+ * 
+ * @param {IBaseWebsocketHandler} websocketHandler - The class instance containing WebSocket event handlers.
+ * @param {IWebsocketGateway} gateway - The WebSocket gateway instance managing event handlers.
+ */
+export function registerWebsocketEventHandlers(
+  websocketHandler: IBaseWebsocketHandler,
+  gateway: IWebsocketGateway
+) {
+  // Retrieve the prototype of the class to inspect its methods
+  const prototype = Object.getPrototypeOf(websocketHandler);
+
+  // Iterate through all method names in the prototype
+  Object.getOwnPropertyNames(prototype).forEach((methodName) => {
+    // Retrieve the associated event type from metadata
+    const eventType = Reflect.getMetadata('websocket:eventType', prototype, methodName);
+
+    if (eventType) {
+      const handler = websocketHandler[methodName];
+
+      if (typeof handler === 'function') {
+        // Bind the function once to optimize performance
+        const boundHandler = handler.bind(websocketHandler);
+        // Register the event type -> function mapping in the gateway
+        gateway.setMapEventHandlers(eventType, boundHandler);
+        // console.log(`WebSocket event registered: ${eventType} -> ${methodName}`);
+      } else {
+        console.warn(`Method ${methodName} is not a function.`);
+      }
+    }
+  });
+}
+
+
+/**
+ * Subscribes WebSocket event handlers to the server.
+ * 
+ * This function retrieves all registered event handlers from the WebSocket gateway 
+ * and binds them to the corresponding WebSocket events. The "connection" event is 
+ * handled separately to ensure it is executed only once per client connection.
+ * 
+ * @param {IWebsocketGateway} gateway - The WebSocket gateway instance managing the event handlers.
+ */
+export function subscribeSocketEvents(gateway: IWebsocketGateway) {
+  const eventMap = gateway.getMapEventHandlers();
+  const server = gateway.getServer();
+
+  // Retrieve the "connection" event handler if it exists in the event map
+  const connectionHandler = eventMap.get("connection");
+
+  // Listen for new client connections
+  server.on('connection', (client: Socket) => {
+    // console.log("New WebSocket client connected");
+
+    // Execute the "connection" event handler if it was registered
+    if (connectionHandler) {
+      connectionHandler(server, client);
+    }
+
+    // Register other WebSocket event handlers for this client
+    eventMap.forEach((handler, eventType) => {
+      if (eventType !== "connection") { // Prevent overriding the "connection" event
+        // console.log(`Registering WebSocket event: ${eventType}`);
+        client.on(eventType, (payload: any) => {
+          handler(server, client, payload);
+        });
+      }
+    });
+  });
 }

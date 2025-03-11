@@ -103,12 +103,13 @@ export type BaseModel = {
      * @returns True if the deletion was successful, false otherwise.
      * @throws Will throw an error if the deletion fails.
      */
-    async delete(id: string): Promise<boolean> {
+    async delete(id: string): Promise<any> {
+      // TODO: retourner le mesage supprimer
       try {
-        await this.model.delete({
+        return await this.model.delete({
           where: { id },
         });
-        return true; // Return true if the entity was successfully deleted
+        // return true; // Return true if the entity was successfully deleted
       } catch (error) {
         if (error instanceof Error) {
           throw new Error('Error deleting entity: ' + error.message);
