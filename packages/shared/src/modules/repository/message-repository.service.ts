@@ -7,4 +7,10 @@ export class MessageRepository extends BaseRepository<MessageEntity,  typeof Pri
   constructor(protected readonly prisma: PrismaService) {
     super(prisma.message);
   }
+
+  public edit(message: MessageEntity): Promise<MessageEntity> {
+    return this.update(message.id, {
+      content: message.content,
+    });
+  }
 }

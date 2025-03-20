@@ -4,34 +4,34 @@
  */
 export abstract class BaseEntity {
     /** The timestamp when the entity was created. */
-    createdAt: Date;
+    createdAt: Date | undefined;
 
     /** The timestamp when the entity was last updated. */
-    updatedAt: Date;
+    updatedAt: Date | undefined;
 
     /**
      * Creates an instance of BaseEntity.
-     * @param createdAt The creation timestamp. If not provided, the current date will be used.
-     * @param updatedAt The update timestamp. If not provided, the current date will be used.
+     * @param createdAt The creation timestamp. 
+     * @param updatedAt The last update timestamp. 
      */
     constructor(createdAt?: Date, updatedAt?: Date) {
-        this.createdAt = createdAt || new Date();
-        this.updatedAt = updatedAt || new Date();
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt
     }
 
     /**
      * Gets the creation timestamp of the entity.
      * @returns The creation timestamp.
      */
-    getCreatedAt(): Date {
+    getCreatedAt(): Date | undefined{
         return this.createdAt;
     }
 
     /**
      * Gets the update timestamp of the entity.
-     * @returns The update timestamp.
+     * @returns The last update timestamp.
      */
-    getUpdatedAt(): Date {
+    getUpdatedAt(): Date | undefined{
         return this.createdAt;
     }
 }
@@ -42,24 +42,24 @@ export abstract class BaseEntity {
  */
 export abstract class SnowflakeEntity extends BaseEntity {
     /** The unique identifier of the entity. */
-    id: string;
+    id: BigInt;
 
     /**
      * Creates an instance of SnowflakeEntity.
      * @param id The unique identifier for the entity.
-     * @param createdAt The creation timestamp. If not provided, the current date will be used.
-     * @param updatedAt The update timestamp. If not provided, the current date will be used.
+     * @param createdAt The creation timestamp. 
+     * @param updatedAt The last update timestamp. 
      */
-    constructor(id: string, createdAt?: Date, updatedAt?: Date) {
+    constructor(id: BigInt | string , createdAt?: Date, updatedAt?: Date) {
         super(createdAt, updatedAt);
-        this.id = id;
+        this.id = typeof id === "string" ? BigInt(id) : id;
     }
 
     /**
      * Gets Snowflake Id of the entity.
      * @returns The snowflake ID of the entity.
      */
-    getId(): string {
+    getId(): BigInt {
         return this.id;
     }
 }
