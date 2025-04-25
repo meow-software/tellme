@@ -8,10 +8,10 @@ import { SnowflakeEntity } from "./abstract.entity";
  */
 export class MessageEntity extends SnowflakeEntity {
   /** The ID of the channel where the message is posted. */
-  channelId: BigInt;
+  channelId: string;
 
   /** The ID of the sender of the message. */
-  senderId: BigInt;
+  senderId: string;
 
   /** The content of the message. */
   content: string;
@@ -25,10 +25,10 @@ export class MessageEntity extends SnowflakeEntity {
    * @param createdAt The creation timestamp of the message. If not provided, the current date will be used.
    * @param upatedAt The update timestamp of the message. If not provided, the current date will be used.
    */
-  constructor(id: BigInt | string, channelId: BigInt | string, senderId: BigInt | string, content: string, createdAt?: Date, upatedAt?: Date) {
+  constructor(id: string, channelId: string, senderId: string, content: string, createdAt?: Date, upatedAt?: Date) {
     super(id, createdAt, upatedAt);
-    this.channelId = typeof channelId === "string" ? BigInt(channelId) : channelId;
-    this.senderId = typeof senderId === "string" ? BigInt(senderId) : senderId;
+    this.channelId = channelId;
+    this.senderId =  senderId;
     this.content = content;
   }
 
@@ -40,9 +40,9 @@ export class MessageEntity extends SnowflakeEntity {
    * @param content The content of the message.
    * @returns A new instance of MessageEntity with a generated Snowflake ID.
    */
-  static new(snowflakeGenerator: ISnowflakeGenerator, channelId: BigInt | string, senderId: BigInt | string, content: string) {
+  static new(snowflakeGenerator: ISnowflakeGenerator, channelId: string, senderId: string, content: string) {
     const newMessage = new MessageEntity(
-      BigInt(snowflakeGenerator.generate()), // Generate a new Snowflake ID
+      snowflakeGenerator.generate(), // Generate a new Snowflake ID
       channelId,
       senderId,
       content
@@ -50,11 +50,11 @@ export class MessageEntity extends SnowflakeEntity {
     return newMessage;
   }
 
-  static edit(messageId: BigInt | string, channelId: BigInt | string, content: string) {
+  static edit(messageId: string, channelId: string, content: string) {
     const newMessage = new MessageEntity(
       messageId, 
       channelId,
-      BigInt(0), // Sender ID is not updated
+      "0", // Sender ID is not updated
       content,
     );
     return newMessage;

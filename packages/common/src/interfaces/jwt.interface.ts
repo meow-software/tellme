@@ -1,7 +1,7 @@
 
 export interface AuthPayload {
-  sub: BigInt | string;
-  userId: BigInt | string;
+  sub: string;
+  userId: string;
   email: string;
 }
 

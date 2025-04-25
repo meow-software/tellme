@@ -81,7 +81,7 @@ export class BaseRepository<
    * @returns The updated entity.
    * @throws Will throw an error if the update fails.
    */
-  async update(id: string | BigInt, fields: any): Promise<T> {
+  async update(id: string , fields: any): Promise<T> {
     try {
       return await this.model.update({
         where: { id },
@@ -104,7 +104,7 @@ export class BaseRepository<
    * @returns True if the deletion was successful, false otherwise.
    * @throws Will throw an error if the deletion fails.
    */
-  async delete(id: string | BigInt): Promise<any> {
+  async delete(id: string ): Promise<any> {
     // TODO: retourner le mesage supprimer
     try {
       return await this.model.delete({
@@ -126,7 +126,7 @@ export class BaseRepository<
    * @returns The found entity or null if not found.
    * @throws Will throw an error if the find operation fails.
    */
-  async findById(id: string | BigInt): Promise<T | null> {
+  async findById(id: string ): Promise<T | null> {
     try {
       return await this.model.findUnique({
         where: { id },

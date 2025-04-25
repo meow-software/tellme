@@ -1,6 +1,7 @@
-import { ISnowflakeGenerator } from "@tellme/common"; 
+import { ISnowflakeGenerator, PrismaService } from "@tellme/common"; 
 import * as bcrypt from "bcrypt";
 import { SnowflakeEntity } from "./abstract.entity";
+import { User } from "@prisma/client";
 
 /**
  * Represents a user entity with a username, and email.
@@ -25,12 +26,12 @@ export class UserEntity extends SnowflakeEntity {
    * @param createdAt The creation timestamp of the user. If not provided, the current date will be used.
    * @param updatedAt The update timestamp of the user. If not provided, the current date will be used.
    */
-  constructor(id: BigInt | string, username: string, email: string, password?: string, createdAt?: Date, updatedAt?: Date) {
+  constructor(id: string, username: string, email: string, password?: string, createdAt?: Date, updatedAt?: Date) {
     super(id, createdAt, updatedAt);
     this.username = username;
     this.email = email;
     this.password = password;
-  }
+  }  
 
   /**
    * Compares a given password with the stored hashed password.
@@ -81,6 +82,35 @@ export class UserEntity extends SnowflakeEntity {
       username,
       email,
       await bcrypt.hash(password, 10)
+    );
+    return newUser;
+  }
+  /**
+   * Converts a raw Prisma user model into a `UserEntity` instance.
+   * 
+   * This method maps the properties of the raw Prisma user object to an instance of
+   * `UserEntity`. It is typically used after fetching a user from the database 
+   * to ensure that the data is properly structured as a `UserEntity` with any 
+   * additional methods or logic applied.
+   * 
+   * @param user - The raw user object fetched from Prisma, containing properties 
+   *               like `id`, `username`, `email`, `password`, and `createdAt`.
+   * 
+   * @returns A new instance of `UserEntity` with the mapped properties.
+   * 
+   * @example
+   * const userModel = { id: 1, username: 'johndoe', email: 'john@example.com', password: 'hashedpassword', createdAt: new Date() };
+   * const userEntity = UserEntity.fromModel(userModel);
+   * console.log(userEntity instanceof UserEntity); // true
+   * console.log(userEntity.username);  // 'johndoe'
+   */
+  static fromModel(user : any) {
+    const newUser = new UserEntity(
+      user.id.toString(),
+      user.username,
+      user.email,
+      user.password,
+      user.createdAt,
     );
     return newUser;
   }

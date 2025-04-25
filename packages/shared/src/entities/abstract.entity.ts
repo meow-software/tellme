@@ -42,7 +42,7 @@ export abstract class BaseEntity {
  */
 export abstract class SnowflakeEntity extends BaseEntity {
     /** The unique identifier of the entity. */
-    id: BigInt;
+    id: string;
 
     /**
      * Creates an instance of SnowflakeEntity.
@@ -50,16 +50,16 @@ export abstract class SnowflakeEntity extends BaseEntity {
      * @param createdAt The creation timestamp. 
      * @param updatedAt The last update timestamp. 
      */
-    constructor(id: BigInt | string , createdAt?: Date, updatedAt?: Date) {
+    constructor(id: string , createdAt?: Date, updatedAt?: Date) {
         super(createdAt, updatedAt);
-        this.id = typeof id === "string" ? BigInt(id) : id;
+        this.id = id;
     }
 
     /**
      * Gets Snowflake Id of the entity.
      * @returns The snowflake ID of the entity.
      */
-    getId(): BigInt {
+    getId(): string {
         return this.id;
     }
 }

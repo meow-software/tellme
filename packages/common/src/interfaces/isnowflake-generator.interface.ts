@@ -80,6 +80,6 @@ export class SnowflakeGenerator extends AbstractSnowflakeGenerator {
      * @returns A unique Snowflake ID as a string.
      */
     generate(): string {
-        return this.snowflake.generate().toString();  // Generate and return the ID as a string
+        return this.snowflake.generate();  // Generate and return the ID as a string
     }
 }

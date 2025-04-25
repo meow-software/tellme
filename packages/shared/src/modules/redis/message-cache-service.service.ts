@@ -15,7 +15,7 @@ export class MessageCacheService extends RedisClientService {
     * Saves a message in a channel
     * @param guildId Guild ID
     */
-    async saveMessage(message: MessageEntity, guildId?: BigInt) {
+    async saveMessage(message: MessageEntity, guildId?: string) {
         const messageKey = RedisCacheKey.getMessage(message.id);
         const channelKey = RedisCacheKey.getChannel(message.channelId, guildId);
 
@@ -25,7 +25,7 @@ export class MessageCacheService extends RedisClientService {
         });
 
         // Ajout du message dans la LIST du salon
-        await this.redis.lpush(channelKey, message.id.toString());
+        await this.redis.lpush(channelKey, message.id);
 
         // Limite à 100 messages (supprime les plus anciens)
         await this.redis.ltrim(channelKey, 0, 99);
@@ -38,7 +38,7 @@ export class MessageCacheService extends RedisClientService {
      * @param message The updated message entity.
      * @param guildId Optional guild ID for retrieving the correct channel key.
      */
-    async updateMessage(message: MessageEntity, guildId?: BigInt) {
+    async updateMessage(message: MessageEntity, guildId?: string) {
         const messageKey = RedisCacheKey.getMessage(message.id);
 
         // Check if the message exists in Redis
@@ -53,9 +53,9 @@ export class MessageCacheService extends RedisClientService {
 
         // Ensure the message is still in the channel's LIST
         const messages = await this.redis.lrange(channelKey, 0, -1);
-        if (!messages.includes(message.id.toString())) {
+        if (!messages.includes(message.id)) {
             // If the message is missing, re-add it to the list
-            await this.redis.lpush(channelKey, message.id.toString());
+            await this.redis.lpush(channelKey, message.id);
             // Keep the list limited to the last 100 messages
             await this.redis.ltrim(channelKey, 0, 99);
         }
@@ -68,7 +68,7 @@ export class MessageCacheService extends RedisClientService {
      * @param messageEntity The deleted message.
      * @param guildId Optional guild ID for retrieving the correct channel key.
      */
-    async deleteMessage(messageEntity: MessageEntity, guildId?: BigInt) {
+    async deleteMessage(messageEntity: MessageEntity, guildId?: string) {
         const messageKey = RedisCacheKey.getMessage(messageEntity.id);
         const channelKey = RedisCacheKey.getChannel(messageEntity.channelId, guildId);
 
@@ -76,7 +76,7 @@ export class MessageCacheService extends RedisClientService {
         await this.redis.del(messageKey);
 
         // Remove the message ID from the channel's message list
-        await this.redis.lrem(channelKey, 0, messageEntity.id.toString());
+        await this.redis.lrem(channelKey, 0, messageEntity.id);
     }
 
 
@@ -86,7 +86,7 @@ export class MessageCacheService extends RedisClientService {
     * @param channelId Channel ID
     * @param limit Number of messages to retrieve (default 10)
     */
-    async getMessages(guildId: BigInt, channelId: BigInt, limit: number = 10) {
+    async getMessages(guildId: string, channelId: string, limit: number = 10) {
         const channelKey = RedisCacheKey.getChannel(channelId, guildId);
 
         // Récupérer les derniers `limit` messages
@@ -106,7 +106,7 @@ export class MessageCacheService extends RedisClientService {
     * Gets all messages from a guild (all its channels)
     * @param guildId Guild ID
     */
-    async getMessagesFromGuild(guildId: BigInt) {
+    async getMessagesFromGuild(guildId: string) {
         const pattern = RedisCacheKey.getChannelsFromGuild(guildId);
         const keys = await this.redis.keys(pattern);
 
@@ -118,7 +118,7 @@ export class MessageCacheService extends RedisClientService {
                 // continue; // TODO, reactiver apres avoir testé le cas
                 channelId = "0";// TODO, supprimer apres avoir testé le cas
             }
-            const messages = await this.getMessages(BigInt(channelId), guildId);
+            const messages = await this.getMessages(channelId, guildId);
             allMessages[channelId] = messages;
         }
 

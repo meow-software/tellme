@@ -13,14 +13,14 @@ export class AuthCacheService extends RedisClientService {
     /**
      * Stores a user token in Redis cache with expiration.
      *
-     * @param {string | BigInt} userId - The user's ID.
+     * @param {string } userId - The user's ID.
      * @param {string} token - The token to store.
      * @returns {Promise<void>} Resolves when the token is stored.
      */
-    async storeToken(userId: string | BigInt, token: string): Promise<void> {
+    async storeToken(userId: string , token: string): Promise<void> {
         try {
             const redis = await this.getIoRedis();
-            const key = RedisCacheKey.getUserToken(userId.toString());
+            const key = RedisCacheKey.getUserToken(userId);
 
             await redis.sadd(key, token);
             await redis.expire(key, RedisCacheTTL.CACHE_TTL_JWT);
@@ -34,15 +34,15 @@ export class AuthCacheService extends RedisClientService {
     /**
      * Updates a user's token in Redis by replacing the old token with a new one.
      *
-     * @param {string | BigInt} userId - The user's ID.
+     * @param {string } userId - The user's ID.
      * @param {string} oldToken - The old token to be removed.
      * @param {string} newToken - The new token to store.
      * @returns {Promise<void>} Resolves when the token is updated.
      */
-    async updateToken(userId: string | BigInt, oldToken: string, newToken: string): Promise<void> {
+    async updateToken(userId: string , oldToken: string, newToken: string): Promise<void> {
         try {
             const redis = await this.getIoRedis();
-            const key = RedisCacheKey.getUserToken(userId.toString());
+            const key = RedisCacheKey.getUserToken(userId);
 
             await redis.srem(key, oldToken); // Remove old token
             await redis.sadd(key, newToken); // Add new token
@@ -57,14 +57,14 @@ export class AuthCacheService extends RedisClientService {
     /**
      * Removes a user's token from Redis cache.
      *
-     * @param {string | BigInt} userId - The user's ID.
+     * @param {string } userId - The user's ID.
      * @param {string} token - The token to remove.
      * @returns {Promise<void>} Resolves when the token is removed.
      */
-    async removeToken(userId: string | BigInt, token: string): Promise<void> {
+    async removeToken(userId: string , token: string): Promise<void> {
         try {
             const redis = await this.getIoRedis();
-            const key = RedisCacheKey.getUserToken(userId.toString());
+            const key = RedisCacheKey.getUserToken(userId);
 
             await redis.srem(key, token);
         } catch (error) {
@@ -76,13 +76,13 @@ export class AuthCacheService extends RedisClientService {
     /**
      * Removes all user's token from Redis cache.
      *
-     * @param {string | BigInt} userId - The user's ID.
+     * @param {string } userId - The user's ID.
      * @returns {Promise<void>} Resolves when the token is removed.
      */
-    async removeAllToken(userId: string | BigInt): Promise<void> {
+    async removeAllToken(userId: string ): Promise<void> {
         try {
             const redis = await this.getIoRedis();
-            const key = RedisCacheKey.getUserToken(userId.toString());
+            const key = RedisCacheKey.getUserToken(userId);
 
             await redis.del(key);
         } catch (error) {
