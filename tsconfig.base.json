@@ -6,10 +6,13 @@
         "packages/shared/*",
         "node_modules/@tellme/shared"
       ],
-      // For typescript completion
       "@tellme/common": [
         "packages/common/*",
         "node_modules/@tellme/common"
+      ],
+      "@tellme/gowther": [
+        "packages/gowther/*",
+        "node_modules/@tellme/gowther"
       ]
     }
   }

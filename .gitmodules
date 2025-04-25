@@ -4,3 +4,7 @@
 [submodule "apps/echo"]
 	path = apps/echo
 	url = https://github.com/meow-software/echo
+[submodule "packages/gowther"]
+	path = packages/gowther
+	url = https://github.com/meow-software/gowther
+	
