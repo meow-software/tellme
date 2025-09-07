@@ -9,7 +9,12 @@ export class AuthController {
     @Post('register')
     async register(@Body() dto: RegisterDto) {
         // return this.authService.register(dto);
-        "register";
+        return this.authService.findById("48548545");
+    }
+    @Get('/')
+    async hey() {
+        // return this.authService.register(dto);
+        return this.authService.findById("48548545");
     }
 /*
     @Get('register/confirm')
