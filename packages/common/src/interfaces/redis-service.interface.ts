@@ -1,6 +1,10 @@
 import { OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import Redis from "ioredis";
 
+export const REDIS_SERVICE = Symbol('REDIS_SERVICE');
+export const REDIS_PUBSUB_SERVICE = Symbol('REDIS_PUBSUB_SERVICE');
+export const REDIS_AUTH_SERVICE = Symbol('REDIS_AUTH_SERVICE');
+
 /**
  * Base interface for Redis integration in NestJS.
  *

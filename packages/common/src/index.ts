@@ -6,4 +6,5 @@ export * from './filters/index';
 export * from './auth/index';
 export * from './interfaces/index';
 export * from './decorators/index';
-export * from './dto';
+export * from './dto/index';
+export * from './module/index';
