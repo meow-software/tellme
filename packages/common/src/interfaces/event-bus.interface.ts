@@ -1,7 +1,17 @@
 export const EVENT_BUS = Symbol('EVENT_BUS');
 
 export interface IEventBus {
-  publish(topic: string, message: any): Promise<void>;
-  subscribe?(topic: string, handler: (message: any) => Promise<void> | void): Promise<void>;
-  close?(): Promise<void>;
+  /**
+   * Publishes an event on a given channel/topic
+   * @param channel - The name of the channel or topic
+   * @param message - The event payload
+   */
+  publish(channel: string, message: any): Promise<void>;
+
+  /**
+   * Subscribes to a channel/topic
+   * @param channel - The name of the channel or topic
+   * @param callback - Function called for each received message
+   */
+  subscribe(channel: string, callback: (message: any) => void): void;
 }

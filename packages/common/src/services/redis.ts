@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { IRedisService } from '../interfaces/';
+import { IEventBus, IRedisService } from '../interfaces/';
 
 /**
  * Abstract base class for Redis integration in NestJS modules.
@@ -192,5 +192,33 @@ export abstract class AbstractRedisAuth extends AbstractRedisPubSub {
       jti,
       ttl.toString()
     );
+  }
+}
+
+
+export abstract class RedisEventBus extends AbstractRedisPubSub implements IEventBus {
+  /**
+   * Publishes an event to a given channel.
+   * The message is automatically serialized to JSON before publishing.
+   * 
+   * @param channel - The name of the channel or topic
+   * @param message - The payload of the event
+   */
+  async publish(channel: string, message: any) {
+    await super.publish(channel, JSON.stringify(message));
+  }
+
+  /**
+   * Subscribes to a specific channel.
+   * Incoming messages are automatically deserialized from JSON before
+   * being passed to the callback.
+   * 
+   * @param channel - The name of the channel or topic
+   * @param callback - Function invoked for each received message
+   */
+  subscribe(channel: string, callback: (message: any) => void) {
+    super.onMessage((ch, msg) => {
+      if (ch === channel) callback(JSON.parse(msg));
+    });
   }
 }
