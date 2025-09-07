@@ -16,5 +16,6 @@
     "moduleResolution": "node",  // Specifies how modules get resolved. "node" is for Node.js module resolution.
     "strictPropertyInitialization": false
   },
-  "include": [ "src/**/*"], // Specifies the files or directories to be included in the compilation process.
+  "include": ["src/**/*"],             // Only include files inside src/
+  "exclude": ["node_modules", "dist"]  // Prevent TS from recompiling generated files
 }

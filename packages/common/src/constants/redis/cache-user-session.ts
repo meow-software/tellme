@@ -1,4 +1,4 @@
-import {UserClientType} from "@tellme/common";
+import {UserClientType} from "../../module";
 
 export const REDIS_CACHE_USER_SESSION = `USER:SESSION:`;
 
