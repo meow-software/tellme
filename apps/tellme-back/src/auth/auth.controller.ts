@@ -17,7 +17,7 @@ export class AuthController {
         // return this.authService.register(dto);
         return this.authService.findById("48548545");
     }
-/*
+
     @Get('register/confirm')
     async registerConfirm(@Query('token') token: string) {
         if (!token) throw new BadRequestException('Token required');
@@ -73,5 +73,5 @@ export class AuthController {
     async logout(@Body() dto: RefreshDto, @Req() req: Request) {
         const accessJti = req.headers['x-access-jti'] as string | undefined;
         return this.authService.logout(dto.refreshToken, accessJti);
-    }*/
+    }
 }
