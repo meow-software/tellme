@@ -21,7 +21,7 @@ export class UserRepository {
 
     async findById(id: bigint): Promise<UserDTO | null> {
         const user: ModelUser = await this.db.user.findUnique({ where: { id } });
-        console.log("---li",)
+        console.log("---li");
         return this.pTIUser(user);
     }
 }

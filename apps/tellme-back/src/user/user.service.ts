@@ -7,7 +7,6 @@ export class UserService implements IUserService {
   constructor(private readonly userRepo: UserRepository) {}
     
   async findById(id: string): Promise<UserDTO | null> {
-    console.log("--id", id);
-    return this.userRepo.findById(id);  
+    return this.userRepo.findById(BigInt(id));  
   } 
 }
