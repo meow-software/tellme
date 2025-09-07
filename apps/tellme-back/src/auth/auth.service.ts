@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { IUserService, UserDTO } from '@tellme/common';
+import { USER_SERVICE, type IUserService, type UserDTO } from '@tellme/common';
 // import { AbstractRedisAuth } from "@tellme/common";
 
 @Injectable()
@@ -8,7 +8,7 @@ export class AuthService  {
     constructor(
         // protected readonly jwt: JwtService,
         // protected readonly redis: RedisService,
-        @Inject('UserService') private readonly userService: IUserService,
+        @Inject(USER_SERVICE) private readonly userService: IUserService,
         // @Inject(eventBusInterface.EVENT_BUS) protected readonly eventBus: eventBusInterface.IEventBus,
     ) {
         // super(jwt, redis, eventBus);

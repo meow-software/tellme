@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { AuthCommonModule } from '@tellme/common';
 import { UserModule } from './user/user.module';
+import { DatabaseService } from '@tellme/database';
 
 @Module({
   imports: [
@@ -16,9 +17,16 @@ import { UserModule } from './user/user.module';
       // ]
     }),
     AuthModule,  
-    AuthCommonModule, UserModule
+    AuthCommonModule, 
+    UserModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService, 
+    DatabaseService,
+  ],
+  exports: [
+    DatabaseService
+  ]
 })
 export class AppModule {}
