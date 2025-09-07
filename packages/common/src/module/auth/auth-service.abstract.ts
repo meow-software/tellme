@@ -22,7 +22,15 @@ import {
 } from '@nestjs/common';
 import * as speakeasy from "speakeasy";
 import { JwtService } from './jwt.service';
+import * as bcrypt from 'bcrypt';
 
+export async function hash(password: string, saltOrRounds: number) {
+  return await bcrypt.hash(password, saltOrRounds);
+}
+
+export async function compare(password: string, hash: string) {
+  return await bcrypt.compare(password, hash);
+}
 
 
 /**

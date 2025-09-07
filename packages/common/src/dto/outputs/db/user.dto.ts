@@ -1,10 +1,11 @@
-import { IUserDto } from "@tellme/core";
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { IUserDto, IBotDto, Snowflake } from "@tellme/core";
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { BotDTO } from "./bot.dto";
 
 export class UserDTO implements IUserDto{
   @Expose()
   @Transform(({ value }) => value?.toString())
-  id: string; 
+  id: Snowflake; 
   
   @Expose()
   username: string; 
@@ -17,4 +18,8 @@ export class UserDTO implements IUserDto{
   
   @Expose()
   isConfirmed: boolean;
+
+  @Expose()
+  @Type(() => BotDTO)
+  bot?: IBotDto;
 }

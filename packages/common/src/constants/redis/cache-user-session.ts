@@ -1,4 +1,4 @@
-import {UserClientType} from "@tellme/ws-core";
+import {UserClientType} from "@tellme/common";
 
 export const REDIS_CACHE_USER_SESSION = `USER:SESSION:`;
 
