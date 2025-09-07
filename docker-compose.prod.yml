@@ -1,15 +1,11 @@
-# docker-compose -f docker-compose.prod.yml up -d
-# docker-compose down --volumes --remove-orphans
-# version: '3.9'
+# docker-compose -f docker-compose.services.yml -f docker-compose.prod.yml up -d --build
+# docker-compose -f docker-compose.services.yml -f docker-compose.prod.yml down
 services:
   backend:
     container_name: tellme_back
     build:
       context: .
       dockerfile: ./apps/tellme-back/Dockerfile
-    # restart: always
-    # env_file:
-    #   - .env
     ports:
       - "3000:3000"
     networks:

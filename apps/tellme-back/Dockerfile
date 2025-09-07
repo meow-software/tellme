@@ -15,11 +15,11 @@ COPY prune/tellme-back/full/packages ./packages
 
 RUN npm ci
 
-# Generate Prisma client for ws-db package (decomment for test prisma)
-# WORKDIR /app/packages/ws-db
-# RUN npx prisma generate
+# Generate Prisma client for database package
+WORKDIR /app/packages/database
+RUN npx prisma generate
 # Back to root for turbo build
-# WORKDIR /app
+WORKDIR /app
 
 # Build only the desired service
 RUN npx turbo run build --filter=tellme-back...

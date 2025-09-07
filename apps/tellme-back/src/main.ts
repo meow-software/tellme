@@ -20,7 +20,7 @@ async function bootstrap() {
   );
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
-  const port = process.env.PORT ?? 3002;
+  const port = process.env.PORT ?? 3000;
   await app.listen(port);
   console.log(`Tellme Backend listening on port ${port}.`);
 }
