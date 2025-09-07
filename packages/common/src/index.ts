@@ -6,3 +6,4 @@ export * from './filters/index';
 export * from './auth/index';
 export * from './interfaces/index';
 export * from './decorators/index';
+export * from './dto';
