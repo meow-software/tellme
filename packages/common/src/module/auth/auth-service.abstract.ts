@@ -1,4 +1,5 @@
-import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { JwtSignOptions } from '@nestjs/jwt';
+
 import {
   AccessPayload,
   RefreshPayload,
@@ -12,13 +13,17 @@ import {
   Snowflake,
   requireEnv,
   IRedisAuthService
-} from '../';
+} from '../..';
 import {
   UnauthorizedException,
   InternalServerErrorException,
   BadRequestException,
+  Injectable,
 } from '@nestjs/common';
 import * as speakeasy from "speakeasy";
+import { JwtService } from './jwt.service';
+
+
 
 /**
  * Abstract AuthService containing core JWT/Redis logic.

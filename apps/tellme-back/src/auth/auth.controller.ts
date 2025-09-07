@@ -12,6 +12,7 @@ export class AuthController {
         return this.authService.findById("48548545");
     }
     @Get('/')
+    @UseGuards(JwtAuthGuard)
     async hey() {
         // return this.authService.register(dto);
         return this.authService.findById("48548545");
