@@ -1,5 +1,5 @@
 import { IsOptional, IsString, MaxLength, IsUrl } from 'class-validator';
-import { IsValidUsername } from '../validators';
+import { IsValidUsername } from '../../validators';
 
 export class UpdateUserDto {
   @IsOptional()

@@ -1,4 +1,4 @@
-import { IsSnowflake } from '../validators';
+import { IsSnowflake } from '../../validators';
 
 export class ResendConfirmationDto {
     @IsSnowflake()

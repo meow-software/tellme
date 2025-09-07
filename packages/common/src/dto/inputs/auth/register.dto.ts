@@ -1,5 +1,5 @@
 import { IsEmail, IsStrongPassword } from 'class-validator';
-import { IsValidUsername } from '../validators';
+import { IsValidUsername } from '../../validators';
 
 export class RegisterDto{
   @IsValidUsername()

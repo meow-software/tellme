@@ -1,4 +1,4 @@
-export * from './auth.module';
+export * from './auth-common.module';
 export * from './jwt.strategy';
 export * from './jwt-auth.guard';
 export * from './tokens.util';

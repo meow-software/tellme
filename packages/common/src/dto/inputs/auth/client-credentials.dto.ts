@@ -1,5 +1,5 @@
 import { IsString, Length } from 'class-validator';
-import { IsSnowflake } from '../validators';
+import { IsSnowflake } from '../../validators';
 
 export class ClientCredentialsDto {
   @IsSnowflake()

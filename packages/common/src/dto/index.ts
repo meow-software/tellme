@@ -1,3 +1,7 @@
 export * from './validators/index';
-export * from './users/index';
-export * from './auth/index';
+// inputs
+export * from './inputs/users/index';
+export * from './inputs/auth/index';
+
+// outputs
+export * from './outputs/db/index';

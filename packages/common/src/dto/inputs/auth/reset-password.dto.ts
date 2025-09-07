@@ -1,4 +1,4 @@
-import { IsSnowflake } from '../index';
+import { IsSnowflake } from '../../validators';
 
 export class ResetPasswordDemandDto {
     @IsSnowflake()
