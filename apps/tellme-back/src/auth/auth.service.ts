@@ -35,8 +35,8 @@ export class AuthService extends AuthServiceAbstract {
         this.confirmEmailRegister(token);
     }
 
-    async resendConfirmationEmail(id: Snowflake, headers: any) {
-        const user = await this.userService.get(`${this.userServiceTarget}/me`, { headers }) as any;
+    async resendConfirmationEmail(id: Snowflake, ctx: any={}) {
+        const user = await this.userService.getMe( {...ctx, id} ) as any;
 
         if (!user) throw new BadRequestException("No user found with this id.");
         if (user.isConfirmed) {
@@ -149,8 +149,8 @@ export class AuthService extends AuthServiceAbstract {
     /**
      * Reset password demand
      */
-    async resetPasswordDemand(userId: Snowflake, headers: any) {
-        const user = await this.userService.get(`${this.userServiceTarget}/me`, { headers }) as any;
+    async resetPasswordDemand(userId: Snowflake, ctx: any) {
+        const user = await this.userService.getMe({...ctx, id: userId}) as any;
         if (!user) throw new BadRequestException("No user found with this email");
 
         this.sendEmailResetPassword(user.id, user.email);
