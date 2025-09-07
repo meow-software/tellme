@@ -1,0 +1,24 @@
+{
+  "name": "@tellme/core",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "npm run watch --workspace=@tellme/core",
+    "clean": "rimraf dist",
+    "build": "rimraf dist && tsc",
+    "watch": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.1.3",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.1"
+  }
+}
