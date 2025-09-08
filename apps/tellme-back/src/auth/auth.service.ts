@@ -1,6 +1,5 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS,  type IEventBus , JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, getAccessTtl, redisCacheKeyPutUserSession} from '@tellme/common';
-// import { AbstractRedisAuth } from "@tellme/common";
+import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS,  type IEventBus , JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession} from '@tellme/common';
 
 @Injectable()
 export class AuthService extends AuthServiceAbstract {
@@ -22,29 +21,27 @@ export class AuthService extends AuthServiceAbstract {
      * Register: delegates user creation to the USER_SERVICE,
      * then issues an access/refresh token pair.
      */
-    async register(dto: RegisterDto) {
-        let user;
-            user = await this.userService.post(`${this.userServiceTarget}/`, { ...dto }) as any;
-        this.sendEmailConfirmation(user.id, user.email);
-        const payload: UserPayload = { sub: user.id.toString(), email: user.email, roles: user.roles, client: 'user' };
+    async registerUser(dto: RegisterDto) {
+        const user = await this.userService.registerUser(dto) as UserDTO;
+        if (!user) throw new BadRequestException('User registration failed.')
+        if (user.email) this.sendEmailConfirmation(user.id, user.email);
+        const payload: UserPayload = { sub: user.id.toString(), email: user.email, client: 'user' };
         return { ...this.issuePair(payload), message: "Check your email to confirm your account." };
-        // return { ...user, message: "Check your email to confirm your account." };
     }
 
     async confirmRegister(token: string) {
         this.confirmEmailRegister(token);
     }
 
-    async resendConfirmationEmail(id: Snowflake, ctx: any={}) {
-        const user = await this.userService.getMe( {...ctx, id} ) as any;
+    async resendEmailConfirmRegister(id: Snowflake, header: any={}) {
+        const user = await this.userService.getMe( {id} ) as UserDTO;
 
         if (!user) throw new BadRequestException("No user found with this id.");
         if (user.isConfirmed) {
             throw new BadRequestException("Account already confirmed.");
         }
 
-        this.sendEmailConfirmation(user.id, user.email);
-
+        if (user.email) this.sendEmailConfirmation(user.id, user.email);
         return { success: true, message: "Confirmation email resent." };
     }
 
@@ -54,23 +51,23 @@ export class AuthService extends AuthServiceAbstract {
      * then issues an access/refresh token pair.
      */
     async login(dto: LoginDto) {
-        const user = await this.userService.post(`${this.userServiceTarget}/check/login`, {...dto }) as any;
+        const user = await this.userService.checkLogin(dto) as UserDTO;
 
         if (!user) {
             throw new UnauthorizedException('Invalid credentials.');
         }
         if (!user.isConfirmed) { 
-            this.sendEmailConfirmation(user.id, user.email);
+            if (user.email) this.sendEmailConfirmation(user.id, user.email);
             throw new UnauthorizedException('Account not confirmed, confirmation email resent.');
         }
 
-        const payload: UserPayload = { sub: String(user.id), email: user.email, roles: user.roles, client: 'user' };
+        const payload: UserPayload = { sub: String(user.id), email: user.email, client: 'user' };
         const issuePair = await this.issuePair(payload);
         const rp = issuePair.payload.refreshPayload;
         const pair = issuePair.pair;
 
         // Store refresh in Redis (key = session, value = userId), TTL = refresh duration
-        await this.redisAuthService.setJSON(redisCacheKeyPutUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
+        await this.redisAuthService.setJSON(buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
         return pair;
     }
 
@@ -116,7 +113,7 @@ export class AuthService extends AuthServiceAbstract {
             }
 
             // 1. Invalidate the old refresh token (rotation)
-            await this.redisAuthService.del(redisCacheKeyPutUserSession(decodedRefresh.sub, decodedRefresh.client, decodedRefresh.jti));
+            await this.redisAuthService.del(buildRedisCacheKeyUserSession(decodedRefresh.sub, decodedRefresh.client, decodedRefresh.jti));
 
             // 2. Put new key
             const payload: UserPayload = { sub: String(decodedRefresh.sub), email: decodedRefresh.email, roles: decodedRefresh.roles, client: decodedRefresh.client };
@@ -125,7 +122,7 @@ export class AuthService extends AuthServiceAbstract {
             const pair = issuePair.pair;
 
             // Store refresh in Redis (key = session, value = userId), TTL = refresh duration
-            await this.redisAuthService.setJSON(redisCacheKeyPutUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
+            await this.redisAuthService.setJSON(buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
             return pair;
         }
 
@@ -137,7 +134,7 @@ export class AuthService extends AuthServiceAbstract {
             const pair = issuePair.pair;
 
             // Store refresh in Redis (key = session, value = userId), TTL = refresh duration
-            await this.redisAuthService.setJSON(redisCacheKeyPutUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
+            await this.redisAuthService.setJSON(buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
             return pair;
         }
 
@@ -150,24 +147,25 @@ export class AuthService extends AuthServiceAbstract {
      * Reset password demand
      */
     async resetPasswordDemand(userId: Snowflake, ctx: any) {
-        const user = await this.userService.getMe({...ctx, id: userId}) as any;
-        if (!user) throw new BadRequestException("No user found with this email");
+        const user = await this.userService.getMe({...ctx, id: userId}) as UserDTO;
+        if (!user) throw new BadRequestException("No user found with this email.");
+        if (!user.email) throw new BadRequestException("User has no email, i can't help you.");
 
         this.sendEmailResetPassword(user.id, user.email);
 
-        return { success: true, message: "Password reset link sent to your email" };
+        return { success: true, message: "Password reset link sent to your email!" };
     }
 
     /**
      * Reset password confirmation
      */
-    async resetPasswordConfirmation(code: string, userId: string, password: string, oldPassword: string, headers: any) {
+    async resetPasswordConfirmation(dto : ResetPasswordConfirmationDto, headers: any = {}) {
         // 1. Check OTP
-        const match = this.checkOTP(code);
+        const match = this.checkOTP(dto.code);
         if (!match) return new UnauthorizedException("Invalid/expired token");
 
         // 2. Edit password
-        return await this.userService.patch(`${this.userServiceTarget}/me`, { password }, { headers });
+        return await this.userService.editPassword(dto.id, dto.password, dto.oldPassword, headers);
     }
 
     /**
@@ -177,17 +175,10 @@ export class AuthService extends AuthServiceAbstract {
     async logout(refreshToken: string, accessTokenJti?: string) {
         try {
             const decoded = await this.verifyRefresh(refreshToken);
-            await this.redisAuthService.del(`refresh:${decoded.jti}`);
+            await this.redisAuthService.del(buildRedisCacheKeyUserSession(decoded.sub, decoded.client, decoded.jti));
         } catch {
             // Refresh already invalid → ignore
         }
-
-        if (accessTokenJti) {
-            // Blacklist access until its expiry
-            const ttl = getAccessTtl();
-            await this.redisAuthService.setNX(`bl:access:${accessTokenJti}`, '1', ttl);
-        }
-
         return { ok: true };
     }
 
@@ -199,18 +190,11 @@ export class AuthService extends AuthServiceAbstract {
      * @throws UnauthorizedException if bot credentials are invalid
      */
     async getBotToken(id: string, token: string) {
-        const bot = await this.userService.post('users/check/login/bot', { id, token: token }) as any;
+        const bot = await this.userService.checkBotLogin(id, token) as BotDTO;
 
-        // const bot = {
-        //     id: clientId,
-        //     clientSecret,
-        //     roles: ["user", "admin"],
-        // }
-
-        if (!bot) throw new UnauthorizedException('Invalid bot credentials');
+        if (!bot) throw new UnauthorizedException('Invalid bot credentials.');
         return this.generateJwtForBot({
             id: bot.id,
-            roles: bot.roles,
         });
     }
 }

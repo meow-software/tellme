@@ -70,7 +70,7 @@ export type UserPayload = {
     /** Subject - unique user identifier (user ID) */
     sub: string;
     /** User's email address (optional) */
-    email?: string;
+    email?: string | null;
     /** User roles - can be array of strings or space-separated string (optional) */
     roles?: string[] | string;
     client: UserClientType

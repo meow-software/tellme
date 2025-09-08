@@ -8,27 +8,20 @@ export class AuthController {
 
     @Post('register')
     async register(@Body() dto: RegisterDto) {
-        // return this.authService.register(dto);
-        return this.authService.findById("48548545");
-    }
-    @Get('/')
-    @UseGuards(JwtAuthGuard)
-    async hey() {
-        // return this.authService.register(dto);
-        return this.authService.findById("48548545");
+        return this.authService.registerUser(dto);
     }
 
     @Get('register/confirm')
-    async registerConfirm(@Query('token') token: string) {
+    async confirmRegister(@Query('token') token: string) {
         if (!token) throw new BadRequestException('Token required');
         return this.authService.confirmRegister(token);
     }
 
     @Post('register/confirm/resend')
-    async resendConfirmation(@Body() dto: ResendConfirmationDto,
+    async resendConfirmRegister(@Body() dto: ResendConfirmationDto,
         @Req() req: Request
     ) {
-        return this.authService.resendConfirmationEmail(dto.id, req.headers);
+        return this.authService.resendEmailConfirmRegister(dto.id, req.headers);
     }
 
     @Post('login')
@@ -37,7 +30,7 @@ export class AuthController {
     }
 
     @Post('bot/login')
-    async getBotToken(@Body() dto: ClientCredentialsDto) {
+    async loginBot(@Body() dto: ClientCredentialsDto) {
         return this.authService.getBotToken(dto.id, dto.clientSecret);
     }
 
@@ -64,7 +57,7 @@ export class AuthController {
         @Body() dto: ResetPasswordConfirmationDto,
         @Req() req: Request
     ) {
-        return this.authService.resetPasswordConfirmation(dto.code, dto.id, dto.password, dto.oldPassword, req.headers);
+        return this.authService.resetPasswordConfirmation(dto, req.headers);
     }
 
 

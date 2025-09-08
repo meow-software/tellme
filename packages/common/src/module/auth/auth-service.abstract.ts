@@ -162,17 +162,15 @@ export abstract class AuthServiceAbstract {
    * @param data.roles - Optional array or string of role permissions
    * @returns Promise resolving to authentication token response object
    */
-  protected async generateJwtForBot(data: { id: string, roles?: string[] | string }): Promise<any> {
+  protected async generateJwtForBot(data: { id: string }): Promise<any> {
     const jti = newJti();
     const ttl = getBotAccessTtl();
-    const redis = this.redisService.redis;
 
     const payload: AccessPayload = {
       sub: data.id,
       client: 'bot',
       type: 'access',
       jti: jti,
-      roles: data.roles,
     };
 
     // Step 1: Generate a fresh token
