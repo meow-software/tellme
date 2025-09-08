@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { DatabaseService, RepositoryModule, UserRepository } from '@tellme/database';
 import { UserController } from './user.controller';
-import { EventBusModule, SnowflakeService, USER_SERVICE } from '@tellme/common';
+import { EventBusModule, RedisModule, SnowflakeService, USER_SERVICE } from '@tellme/common';
 import { CreateUserHandler } from './cqrs/commands/handlers/create-user.handler';
 import { DeleteUserHandler } from './cqrs/commands/handlers/delete-user.handler';
 import { UpdateUserHandler } from './cqrs/commands/handlers/update-user.handler';
@@ -17,6 +17,7 @@ import { CqrsModule } from '@nestjs/cqrs';
     CqrsModule, 
     EventBusModule,
     RepositoryModule,
+    RedisModule,
   ],
   providers: [
     UserService,

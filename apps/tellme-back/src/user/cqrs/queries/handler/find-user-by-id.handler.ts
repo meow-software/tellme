@@ -1,8 +1,8 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { FindUserByIdQuery } from '../find-user-by-id.query';
-import {SnowflakeService, buildRedisCacheKeyUser, REDIS_CACHE_USER_TTL} from '@tellme/common';
+import {SnowflakeService, buildRedisCacheKeyUser, REDIS_CACHE_USER_TTL, REDIS_SERVICE, type IRedisService} from '@tellme/common';
 import { UserRepository } from '@tellme/database'
-import { AtlasRedisService } from 'src/services/redis.service';
+import { Inject } from '@nestjs/common';
 
 @QueryHandler(FindUserByIdQuery)
 export class FindUserByIdHandler implements IQueryHandler<FindUserByIdQuery> {
@@ -10,7 +10,7 @@ export class FindUserByIdHandler implements IQueryHandler<FindUserByIdQuery> {
     constructor(
         private userRepository: UserRepository, 
         private snowflake: SnowflakeService, 
-        private redis: AtlasRedisService
+        @Inject(REDIS_SERVICE) private readonly redisService: IRedisService,
     ) { }
 
     async execute(query: FindUserByIdQuery) {
@@ -18,7 +18,7 @@ export class FindUserByIdHandler implements IQueryHandler<FindUserByIdQuery> {
         const key = buildRedisCacheKeyUser(id);
         let user, cached;
 
-        if (!full) cached = await this.redis.getJSON(key);
+        if (!full) cached = await this.redisService.getJSON(key);
         if (cached) user = cached;
         else {
             let _id = this.snowflake.toBigInt(id);
@@ -32,7 +32,7 @@ export class FindUserByIdHandler implements IQueryHandler<FindUserByIdQuery> {
             } // cached is already null
         }
         // Refresh cache with old data of user or new data of user
-        if (cached) await this.redis.setJSON(key, cached, this.CACHE_TTL);
+        if (cached) await this.redisService.setJSON(key, cached, this.CACHE_TTL);
         return user;
     }
 }
