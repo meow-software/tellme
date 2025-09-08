@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { DatabaseService } from '../services/database.service';
+import { DatabaseService, Prisma } from '../services/database.service';
 import { plainToInstance } from 'class-transformer';
 import { hash, compare, UserDTO, BotDTO, LoginDto } from '@tellme/common';
 
@@ -75,6 +75,14 @@ export class UserRepository {
     }
 
 
+    async findUnique(
+        args: Prisma.UserFindUniqueArgs
+    ): Promise<UserDTO | null> {
+        const user = await this.db.user.findUnique(args);
+        return this.pTIUser(user);
+    }
+
+
     protected async findRawUserByEmailOrUsername(emailOrUsername: string) {
         return await this.db.user.findFirst({
             where: {
@@ -85,16 +93,16 @@ export class UserRepository {
             },
         });
     }
-    
+
     async findUserByEmailOrUsername(emailOrUsername: string): Promise<UserDTO | null> {
         return this.pTIUser(this.findRawUserByEmailOrUsername(emailOrUsername));
     }
 
-    async checkUserLogin(dto: LoginDto) :  Promise<UserDTO | null> {
+    async checkUserLogin(dto: LoginDto): Promise<UserDTO | null> {
         const user = await this.findRawUserByEmailOrUsername(dto.usernameOrEmail);
         if (!!user && await compare(dto.password, user.password)) {
             return this.pTIUser(user);
-        } 
+        }
         return null;
     }
 

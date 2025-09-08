@@ -3,7 +3,7 @@ import { BotDTO, LoginDto, RegisterDto, UserDTO } from '../dto';
 export const USER_SERVICE = Symbol('USER_SERVICE');
 
 export interface IUserService {
-  findById(id: string): Promise<UserDTO | null>;
+  findById(id: string, full?: boolean): Promise<UserDTO | null>;
   registerUser(dto: RegisterDto): Promise<UserDTO>;
   checkLogin(dto: LoginDto): Promise<UserDTO | null>;
   checkBotLogin(id: string, token: string): Promise<BotDTO | null>;

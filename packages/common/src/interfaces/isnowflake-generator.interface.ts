@@ -136,7 +136,7 @@ export class SnowflakeGenerator extends AbstractSnowflakeGenerator {
     * Converts a string to a bigint.
     * @param id Snowflake to a string.
     */
-    toBigInt(id: string): bigint {
+    toBigInt(id: string | bigint): bigint {
         return BigInt(id);
     }
 
@@ -147,7 +147,7 @@ export class SnowflakeGenerator extends AbstractSnowflakeGenerator {
     * - 10 bits = workerId
     * - 12 bits = increment (sequence)
     */
-    deconstruct(id: bigint) {
+    deconstruct(id: bigint | String) {
         const epoch = this.epoch; // get your epoch 
         const binary = id.toString(2).padStart(64, '0');
 

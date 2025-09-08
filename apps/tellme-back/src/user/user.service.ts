@@ -1,6 +1,8 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { IUserService, UserDTO, RegisterDto, LoginDto } from '@tellme/common';
-import { UserRepository } from '@tellme/database'; 
+import { UserRepository } from '@tellme/database';
+import { FindUserByIdQuery } from './cqrs/queries/find-user-by-id.query';
 
 /**
  * UserService is the concrete implementation of IUserService.
@@ -10,15 +12,20 @@ import { UserRepository } from '@tellme/database';
  */
 @Injectable()
 export class UserService implements IUserService {
-  constructor(private readonly userRepo: UserRepository) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+    private readonly userRepo: UserRepository
+  ) { }
 
   /**
    * Finds a user by their unique ID.
    * @param id - User ID as a string
    * @returns UserDTO if found, null otherwise
    */
-  async findById(id: string): Promise<UserDTO | null> {
-    return this.userRepo.findById(BigInt(id));
+  async findById(id: string, full:boolean = false): Promise<UserDTO | null> {
+    // return this.userRepo.findById(BigInt(id));
+    return this.queryBus.execute(new FindUserByIdQuery(id, full));
   }
 
   /**
@@ -46,7 +53,7 @@ export class UserService implements IUserService {
     const user = await this.userRepo.checkUserLogin(dto);
     if (!user) return null;
 
-    const isPasswordValid = await this.userRepo.verifyPassword(user.id, dto.password); 
+    const isPasswordValid = await this.userRepo.verifyPassword(user.id, dto.password);
     if (!isPasswordValid) return null;
 
     return user;
@@ -58,7 +65,7 @@ export class UserService implements IUserService {
    * @returns UserDTO if found, null otherwise
    */
   async getMe(ctx: any): Promise<UserDTO | null> {
-    const userId = ctx.id; 
+    const userId = ctx.id;
     if (!userId) return null;
     return this.findById(userId);
   }

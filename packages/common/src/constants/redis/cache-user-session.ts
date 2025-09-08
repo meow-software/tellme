@@ -14,12 +14,12 @@ export const REDIS_CACHE_USER_SESSION = `USER:SESSION:`;
  * await redis.set(key, JSON.stringify({ isActive: true }), "EX", 3600);
  * ```
  *
- * @param {string} userId - The ID of the user.
+ * @param {string | bigint} userId - The ID of the user.
  * @param {UserClientType} clientType - Type of client user.
  * @param {string} token - The session token to store.
  * @returns {string} The Redis cache key where the token should be stored.
  */
-export const buildRedisCacheKeyUserSession = (userId: string, clientType: UserClientType, token: string): string => {
-    return `${REDIS_CACHE_USER_SESSION}${clientType}:${userId}:${token}`;
+export const buildRedisCacheKeyUserSession = (userId: string | bigint, clientType: UserClientType, token: string): string => {
+    return `${REDIS_CACHE_USER_SESSION}${clientType}:${userId.toString()}:${token}`;
 }
 
