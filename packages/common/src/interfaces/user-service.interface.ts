@@ -1,14 +1,15 @@
-import { BotDTO, LoginDto, RegisterDto, UserDTO } from '../dto';
+import { Snowflake } from '@tellme/core';
+import { LoginDto, RegisterDto, UpdateUserDto, UserDTO } from '../dto';
 
 export const USER_SERVICE = Symbol('USER_SERVICE');
 
 export interface IUserService {
-  findById(id: string, full?: boolean): Promise<UserDTO | null>;
+  findById(id:  Snowflake | bigint, full?: boolean): Promise<UserDTO | null>;
   registerUser(dto: RegisterDto): Promise<UserDTO>;
   checkLogin(dto: LoginDto): Promise<UserDTO | null>;
-  checkBotLogin(id: string, token: string): Promise<BotDTO | null>;
+  checkBotLogin(id:  Snowflake | bigint, token: string): Promise<UserDTO | null>;
   getMe(ctx: any): Promise<UserDTO | null>;
-  editPassword(id: string, password: string, oldPassword: string, ctx: any): Promise<UserDTO>;
-  patchMe(dto: any): Promise<UserDTO>;
-  // resendConfirmationEmail?(userId: string): Promise<void>;
+  updatePassword(id:  Snowflake | bigint, password: string, oldPassword: string, ctx: object): Promise<any>;
+  patchMe(dto: UpdateUserDto, ctx: any): Promise<UserDTO>; 
+  searchUsers(term: string, ctx: any): Promise<UserDTO[]>;
 }

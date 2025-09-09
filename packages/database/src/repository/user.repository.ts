@@ -1,47 +1,67 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DatabaseService, Prisma } from '../services/database.service';
 import { plainToInstance } from 'class-transformer';
-import { hash, compare, UserDTO, BotDTO, LoginDto } from '@tellme/common';
-
+import { UserDTO, BotDTO, Snowflake } from '@tellme/common';
 
 @Injectable()
 export class UserRepository {
-    protected PASSWORD_SALT_ROUNDS;
+    protected PASSWORD_SALT_ROUNDS: number;
+
     constructor(private db: DatabaseService) {
+        // Number of bcrypt salt rounds used for password hashing
         this.PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS) ?? 10;
     }
 
     /**
-     * Converts a database User model to a UserDTO.
-     * @param user - The database user model
-     * @returns UserDTO or null
+     * Converts a raw database User model into a UserDTO.
+     * Removes circular references and ensures only exposed fields are mapped.
+     *
+     * @param user - The raw User entity from the database
+     * @returns UserDTO or null if user is not provided
      */
-    protected pTIUser(user: any): UserDTO | null {
+    public pTIUser(user: any): UserDTO | null {
         if (!user) return null;
-        let userWithBot = {
+
+        // Avoid circular reference (User -> Bot -> User)
+        const userWithBot = {
             ...user,
-            bot: user.bot ? { ...user.bot, user: undefined } : undefined, // avoid circular reference
+            bot: user.bot ? { ...user.bot, user: undefined } : undefined,
         };
+
         return plainToInstance(UserDTO, userWithBot, { excludeExtraneousValues: true });
     }
 
+    /**
+     * Shortcut to access the raw Prisma user model.
+     */
+    get raw() {
+        return this.db.user;
+    }
 
     /**
-     * Converts a database Bot model to a BotDTO.
-     * @param bot - The database bot model
-     * @returns BotDTO or null
+     * Converts a raw database Bot model into a BotDTO.
+     * Removes circular references and ensures only exposed fields are mapped.
+     *
+     * @param bot - The raw Bot entity from the database
+     * @returns BotDTO or null if bot is not provided
      */
-    protected pTIBot(bot: any): BotDTO | null {
+    public pTIBot(bot: any): BotDTO | null {
         if (!bot) return null;
-        let botWithUser = {
+
+        // Avoid circular reference (Bot -> User -> Bot)
+        const botWithUser = {
             ...bot,
-            bot: bot.user ? { ...bot.user, bot: undefined } : undefined, // avoid circular reference
+            user: bot.user ? { ...bot.user, bot: undefined } : undefined,
         };
+
         return plainToInstance(BotDTO, botWithUser, { excludeExtraneousValues: true });
     }
 
     /**
      * Finds a user by their unique ID.
+     *
+     * @param id - User ID as bigint
+     * @returns UserDTO or null if not found
      */
     async findById(id: bigint): Promise<UserDTO | null> {
         const user = await this.db.user.findUnique({ where: { id } });
@@ -50,16 +70,17 @@ export class UserRepository {
 
     /**
      * Creates a new user in the database.
+     *
+     * @param data - User data (id, username, email, hashedPassword)
+     * @returns The newly created UserDTO
      */
-    async createUser(data: { id: string | bigint; username: string; email: string; password: string; }): Promise<UserDTO> {
-        const hashedPassword = await hash(data.password, this.PASSWORD_SALT_ROUNDS);
-        const id: bigint = data.id as bigint;
+    async createUser(data: { id: string | bigint; username: string; email: string; hashedPassword: string; }): Promise<UserDTO> {
+        const id: bigint = BigInt(data.id);
         const user = await this.db.user.create({
             data: {
-                id: id,
-                username: data.username,
-                email: data.email,
-                password: hashedPassword,
+                ...data,
+                id,
+                password: data.hashedPassword,
                 isConfirmed: false,
             },
         });
@@ -67,75 +88,95 @@ export class UserRepository {
     }
 
     /**
-     * Finds a user by email.
+     * Finds a user by their unique email.
+     *
+     * @param email - Email address
+     * @returns UserDTO or null if not found
      */
     async findByEmail(email: string): Promise<UserDTO | null> {
         const user = await this.db.user.findUnique({ where: { email } });
         return this.pTIUser(user);
     }
 
-
-    async findUnique(
-        args: Prisma.UserFindUniqueArgs
-    ): Promise<UserDTO | null> {
-        const user = await this.db.user.findUnique(args);
+    /**
+     * Finds a user using Prisma's findUnique (only works with @id or @unique fields).
+     *
+     * @param args - Prisma findUnique args
+     * @returns UserDTO or null if not found
+     */
+    async findUnique(args: Prisma.UserFindUniqueArgs): Promise<UserDTO | null> {
+        const user = await this.raw.findUnique(args);
         return this.pTIUser(user);
     }
 
-
-    protected async findRawUserByEmailOrUsername(emailOrUsername: string) {
-        return await this.db.user.findFirst({
-            where: {
-                OR: [
-                    { username: emailOrUsername },
-                    { email: emailOrUsername },
-                ],
-            },
-        });
-    }
-
-    async findUserByEmailOrUsername(emailOrUsername: string): Promise<UserDTO | null> {
-        return this.pTIUser(this.findRawUserByEmailOrUsername(emailOrUsername));
-    }
-
-    async checkUserLogin(dto: LoginDto): Promise<UserDTO | null> {
-        const user = await this.findRawUserByEmailOrUsername(dto.usernameOrEmail);
-        if (!!user && await compare(dto.password, user.password)) {
-            return this.pTIUser(user);
-        }
-        return null;
+    /**
+     * Finds the first user matching the given conditions.
+     * Supports filtering by non-unique fields and relations.
+     *
+     * @param args - Prisma findFirst args
+     * @returns UserDTO or null if not found
+     */
+    async findFirst(args: Prisma.UserFindFirstArgs): Promise<UserDTO | null> {
+        const user = await this.raw.findFirst(args);
+        return this.pTIUser(user);
     }
 
     /**
-     * Verifies that the provided password matches the stored hash.
+     * Finds multiple users matching the given conditions.
+     *
+     * @param args - Prisma findMany args
+     * @returns An array of UserDTO
      */
-    async verifyPassword(userId: bigint, password: string): Promise<boolean> {
-        const user = await this.db.user.findUnique({ where: { id: userId } });
-        if (!user) return false;
-        return await compare(password, user.password);
+    async findMany(args: Prisma.UserFindManyArgs): Promise<UserDTO[]> {
+        const users = await this.raw.findMany(args);
+
+        // Convert to DTOs in a single pass (no nulls kept)
+        return users.reduce<UserDTO[]>((acc, user) => {
+            const dto = this.pTIUser(user);
+            if (dto) acc.push(dto);
+            return acc;
+        }, []);
     }
 
     /**
-     * Updates the password for a given user.
+     * Updates an existing user with the given data.
+     *
+     * @param id - User ID
+     * @param data - Partial user data (excluding ID)
+     * @returns The updated UserDTO
      */
-    async updatePassword(userId: bigint, newPassword: string): Promise<UserDTO> {
-        const hashedPassword = await hash(newPassword, this.PASSWORD_SALT_ROUNDS);
+    async update(id: bigint | Snowflake, data: object): Promise<UserDTO> {
+        delete (data as any).id; // Ensure ID is not overwritten
+
         const user = await this.db.user.update({
-            where: { id: userId },
-            data: { password: hashedPassword },
+            where: { id: BigInt(id) },
+            data: { ...data },
         });
         return this.pTIUser(user) as UserDTO;
     }
 
     /**
-     * Finds a bot user by its client ID.
+     * Finds a user that is associated with a bot by its client ID.
+     * Includes the bot relation in the query.
+     *
+     * @param botId - Bot's client ID
+     * @returns UserDTO or null if not found
      */
-    async findBotById(botId: string): Promise<UserDTO | null> {
-        const user = await this.db.user.findUnique({
+    async findBotById(botId: Snowflake | bigint): Promise<UserDTO | null> {
+        return await this.findFirst({
             where: { id: BigInt(botId) },
             include: { bot: true },
         });
-        if (!user || !user.bot) return null;
+    }
+    /**
+     * Deletes a user by their unique ID.
+     * @param id - User ID (Snowflake or bigint)
+     * @returns The deleted UserDTO if found, otherwise null
+     */
+    async deleteUser(id: Snowflake | bigint): Promise<UserDTO | null> {
+        const user = await this.db.user.delete({
+            where: { id: BigInt(id) },
+        });
         return this.pTIUser(user);
     }
 }

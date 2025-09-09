@@ -1,17 +1,16 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import * as bcrypt from 'bcrypt';
 import { CheckLoginQuery } from '../check-login.query';
 import { UnauthorizedException } from '@nestjs/common';
-import { DatabaseService } from 'src/lib';
+import { UserRepository } from '@tellme/database';
+import { compare } from '@tellme/common';
 
 @QueryHandler(CheckLoginQuery)
 export class CheckLoginHandler implements IQueryHandler<CheckLoginQuery> {
-    constructor(private usersRepo: DatabaseService) { }
+    constructor(private usersRepo: UserRepository) { }
     async execute(query: CheckLoginQuery) {
         const { usernameOrEmail, password } = query;
-        const repository = await this.usersRepo.user
 
-        const user = await repository.findFirst({
+        const user = await this.usersRepo.raw.findFirst({
             where: {
                 OR: [
                     { username: usernameOrEmail },
@@ -20,7 +19,7 @@ export class CheckLoginHandler implements IQueryHandler<CheckLoginQuery> {
             },
         });
 
-        if (!user || !(await bcrypt.compare(password, user.password))) throw new UnauthorizedException('Invalid user credentials.');
-        return user;
+        if (!user || !(await compare(password, user.password))) throw new UnauthorizedException('Invalid user credentials.');
+        return this.usersRepo.pTIUser(user);
     }
 }

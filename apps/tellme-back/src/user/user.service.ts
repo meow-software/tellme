@@ -1,41 +1,44 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { IUserService, UserDTO, RegisterDto, LoginDto } from '@tellme/common';
-import { UserRepository } from '@tellme/database';
+import { IUserService, UserDTO, RegisterDto, LoginDto, UpdateUserDto, Snowflake } from '@tellme/common';
 import { FindUserByIdQuery } from './cqrs/queries/find-user-by-id.query';
+import { CreateUserCommand } from './cqrs/commands/create-user.command';
+import { CheckLoginQuery } from './cqrs/queries/check-login.query';
+import { UpdateUserPasswordCommand } from './cqrs/commands/update-user-password.command';
+import { CheckLoginBotQuery } from './cqrs/queries/check-login-bot.query';
+import { UpdateUserCommand } from './cqrs/commands/update-user.command';
+import { SearchUsersQuery } from './cqrs/queries/search-users.query';
 
 /**
  * UserService is the concrete implementation of IUserService.
- * It acts as a business-oriented repository for all user-related operations.
- * All methods delegate persistence logic to UserRepository and
- * expose domain-specific operations instead of raw HTTP calls.
+ * It acts as the business-oriented service for all user-related operations.
+ * Persistence logic is delegated through the CQRS buses (CommandBus / QueryBus).
  */
 @Injectable()
 export class UserService implements IUserService {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly userRepo: UserRepository
   ) { }
 
   /**
    * Finds a user by their unique ID.
-   * @param id - User ID as a string
+   * @param id - User ID (Snowflake or bigint)
+   * @param full - If true, fetches related entities (e.g. Bot)
    * @returns UserDTO if found, null otherwise
    */
-  async findById(id: string, full:boolean = false): Promise<UserDTO | null> {
-    // return this.userRepo.findById(BigInt(id));
+  async findById(id: Snowflake | bigint, full: boolean = false): Promise<UserDTO | null> {
     return this.queryBus.execute(new FindUserByIdQuery(id, full));
   }
 
   /**
    * Registers a new user in the system.
-   * @param dto - Registration data (email, password, etc.)
+   * @param dto - Registration data (username, email, password)
    * @returns The created UserDTO
    * @throws BadRequestException if registration fails
    */
   async registerUser(dto: RegisterDto): Promise<UserDTO> {
-    const user = await this.userRepo.create(dto);
+    const user = await this.commandBus.execute(new CreateUserCommand(dto.username, dto.email, dto.password));
 
     if (!user) {
       throw new BadRequestException('User registration failed.');
@@ -46,48 +49,34 @@ export class UserService implements IUserService {
 
   /**
    * Validates user credentials for login.
-   * @param dto - Login data (email and password)
+   * @param dto - Login data (usernameOrEmail, password)
    * @returns UserDTO if credentials are valid, null otherwise
    */
   async checkLogin(dto: LoginDto): Promise<UserDTO | null> {
-    const user = await this.userRepo.checkUserLogin(dto);
-    if (!user) return null;
-
-    const isPasswordValid = await this.userRepo.verifyPassword(user.id, dto.password);
-    if (!isPasswordValid) return null;
-
-    return user;
+    return await this.queryBus.execute(new CheckLoginQuery(dto.usernameOrEmail, dto.password));
   }
 
   /**
-   * Retrieves the currently authenticated user based on request headers.
-   * @param ctx - HTTP headers containing authentication info
+   * Retrieves the currently authenticated user.
+   * @param id - User ID
+   * @param ctx - Request context (e.g. headers, JWT payload)
    * @returns UserDTO if found, null otherwise
    */
-  async getMe(ctx: any): Promise<UserDTO | null> {
-    const userId = ctx.id;
-    if (!userId) return null;
-    return this.findById(userId);
+  async getMe(id: Snowflake | bigint, ctx: object = {}): Promise<UserDTO | null> {
+    return this.findById(id);
   }
 
   /**
-   * Resets a user's password.
-   * @param userId - User's unique ID
+   * Updates the password of a user.
+   * @param id - User ID
    * @param password - New password
-   * @param oldPassword - Optional: current password for verification
+   * @param oldPassword - Current password (used for verification)
+   * @param ctx - Request context
    * @returns Updated UserDTO
-   * @throws BadRequestException if reset fails
+   * @throws BadRequestException if update fails
    */
-  async resetPassword(userId: string, password: string, oldPassword?: string): Promise<UserDTO> {
-    const user = await this.findById(userId);
-    if (!user) throw new BadRequestException('User not found');
-
-    if (oldPassword) {
-      const isOldPasswordValid = await this.userRepo.verifyPassword(BigInt(userId), oldPassword);
-      if (!isOldPasswordValid) throw new BadRequestException('Invalid old password');
-    }
-
-    return this.userRepo.updatePassword(BigInt(userId), password);
+  async updatePassword(id: string, password: string, oldPassword: string, ctx: any = {}): Promise<UserDTO> {
+    return await this.commandBus.execute(new UpdateUserPasswordCommand(id, password, oldPassword));
   }
 
   /**
@@ -97,12 +86,30 @@ export class UserService implements IUserService {
    * @returns UserDTO if valid, null otherwise
    */
   async checkBotLogin(id: string, token: string): Promise<UserDTO | null> {
-    const user = await this.userRepo.findBotById(id);
-    if (!user) return null;
-
-    if (user.bot && user.bot.token !== token) return null;
-
-    return user;
+    return await this.queryBus.execute(new CheckLoginBotQuery(id, token));
   }
 
+  /**
+   * Partially updates the profile of the currently authenticated user.
+   * @param dto - Data to update (username, email, etc.)
+   * @param ctx - Request context containing the authenticated user
+   * @returns Updated UserDTO
+   * @throws BadRequestException if user is not authenticated
+   */
+  async patchMe(dto: UpdateUserDto, ctx: any): Promise<UserDTO> {
+    if (!ctx || !ctx.user || !ctx.user.id) {
+      throw new BadRequestException('User not connected!');
+    }
+    return await this.commandBus.execute(new UpdateUserCommand(ctx.user.id, dto));
+  }
+
+  /**
+   * Searches users by a given term.
+   * @param term - Search term in(username, email) (insensitive))
+   * @param ctx - Request context
+   * @returns A list of UserDTO matching the search term
+   */
+  async searchUsers(term: string, ctx: any = {}): Promise<UserDTO[]> {
+    return await this.queryBus.execute(new SearchUsersQuery(term));
+  }
 }

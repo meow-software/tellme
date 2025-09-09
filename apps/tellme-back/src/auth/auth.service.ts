@@ -165,7 +165,7 @@ export class AuthService extends AuthServiceAbstract {
         if (!match) return new UnauthorizedException("Invalid/expired token");
 
         // 2. Edit password
-        return await this.userService.editPassword(dto.id, dto.password, dto.oldPassword, headers);
+        return await this.userService.updatePassword(dto.id, dto.password, dto.oldPassword, headers);
     }
 
     /**
@@ -190,8 +190,7 @@ export class AuthService extends AuthServiceAbstract {
      * @throws UnauthorizedException if bot credentials are invalid
      */
     async getBotToken(id: string, token: string) {
-        const bot = await this.userService.checkBotLogin(id, token) as BotDTO;
-
+        const bot: UserDTO | null = await this.userService.checkBotLogin(id, token) ;
         if (!bot) throw new UnauthorizedException('Invalid bot credentials.');
         return this.generateJwtForBot({
             id: bot.id,

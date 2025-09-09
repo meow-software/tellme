@@ -1,22 +1,21 @@
 
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DeleteUserCommand } from '../delete-user.command';
-import { Inject } from '@nestjs/common';
-import type { IEventBus } from 'src/lib';
-import {SnowflakeService, DatabaseService, EVENT_BUS} from 'src/lib';
+import { Inject, NotFoundException } from '@nestjs/common';
+import { EB_USER_DELETED, EVENT_BUS, SnowflakeService, UserDTO, type IEventBus } from '@tellme/common';
+import { UserRepository } from '@tellme/database';
 
 @CommandHandler(DeleteUserCommand)
 export class DeleteUserHandler implements ICommandHandler<DeleteUserCommand> {
   constructor(
-    private db: DatabaseService, 
-    private snowflake: SnowflakeService, 
-    @Inject(EVENT_BUS) private eventBus: IEventBus) {}
+    private userRepository: UserRepository,
+    @Inject(EVENT_BUS) protected readonly eventBus: IEventBus,
+  ) { }
 
   async execute(command: DeleteUserCommand) {
-    const user = await this.db.user.delete({ where: { id: this.snowflake.toBigInt(command.id) } });
-
-    await this.eventBus.publish('user.deleted', { id: user.id });
-
+    const user : UserDTO | null = await this.userRepository.deleteUser(command.id);
+    if (!user) throw new NotFoundException('User not found');
+    await this.eventBus.publish(EB_USER_DELETED, { id: user.id });
     return user;
   }
 }
