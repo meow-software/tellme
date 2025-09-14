@@ -190,6 +190,7 @@ export class AuthService extends AuthServiceAbstract {
      * @throws UnauthorizedException if bot credentials are invalid
      */
     async getBotToken(id: string, token: string) {
+        console.log("----l", id, token)
         const bot: UserDTO | null = await this.userService.checkBotLogin(id, token) ;
         if (!bot) throw new UnauthorizedException('Invalid bot credentials.');
         return this.generateJwtForBot({

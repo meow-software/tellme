@@ -1,25 +1,28 @@
-import { registerDecorator, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
+import { registerDecorator, ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { REGEX_SNOWFLAKE } from '../..';
 
 /**
  * Custom validator to check if a string is a valid Snowflake ID.
  * A Snowflake ID must:
- * - Be exactly 18 characters long
- * - Contain only digits
+ * - Be exactly 17 or 18 characters long
+ * - Contain only digits 
  */
 @ValidatorConstraint({ async: false })
 export class IsSnowflakeConstraint implements ValidatorConstraintInterface {
 
   /**
    * Validation logic for the Snowflake ID
-   * @param id - the value to validate
+   * @param id - the value to validate 
    * @returns true if the ID is valid, false otherwise
    */
   validate(id: any) {
     const regex = REGEX_SNOWFLAKE;
-    return typeof id === 'string' && regex.test(id);
+    return typeof id === 'string' && regex.test(id); 
   }
 
+  defaultMessage(args: ValidationArguments) {
+    return `${args.property} must be a valid Snowflake ID (17 or 18 digits).`;
+  }
 }
 
 /**

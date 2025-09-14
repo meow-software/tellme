@@ -12,7 +12,7 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
     @Inject(EVENT_BUS) protected readonly eventBus: IEventBus,
   ) { }
 
-  async execute(command: CreateUserCommand) {
+  async execute(command: CreateUserCommand) { 
     // Hash password
     const hashedPassword = await hash(command.password, Number(process.env.PASSWORD_SALT_ROUNDS) ?? 10);
     // can be create
@@ -30,7 +30,6 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
         throw new ConflictException('Username or email already exists.');
       }
     }
-
     await this.eventBus.publish(EB_USER_CREATED, {
       id: this.snowflake.toString(user.id),
       username: user.username,

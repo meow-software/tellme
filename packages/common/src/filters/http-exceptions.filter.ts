@@ -25,7 +25,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (typeof errorResponse === 'string') {
       errorResponse = {error: errorResponse}
     }
-
+    
 
     // Build standardized error response
     const apiResponse: ApiResponse<null> = ResponseUtil.catch(

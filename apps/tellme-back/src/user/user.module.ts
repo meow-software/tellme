@@ -11,6 +11,13 @@ import { EventBusModule, RedisModule, SnowflakeService, USER_SERVICE } from '@te
 import { FindUserByIdHandler } from './cqrs/queries/handler/find-user-by-id.handler';
 // import { SearchUsersHandler } from './cqrs/queries/handler/search-users.handler';
 import { CqrsModule } from '@nestjs/cqrs';
+import { CreateUserHandler } from './cqrs/commands/handlers/create-user.handler';
+import { DeleteUserHandler } from './cqrs/commands/handlers/delete-user.handler';
+import { UpdateUserHandler } from './cqrs/commands/handlers/update-user.handler';
+import { CheckLoginBotHandler } from './cqrs/queries/handler/check-login-bot.handler';
+import { CheckLoginHandler } from './cqrs/queries/handler/check-login.handler';
+import { SearchUsersHandler } from './cqrs/queries/handler/search-users.handler';
+import { UpdateUserPasswordHandler } from './cqrs/commands/handlers/update-user-password.handler';
 
 @Module({
   imports: [
@@ -28,13 +35,14 @@ import { CqrsModule } from '@nestjs/cqrs';
     
     // CQRS
     // Commands
-    // CreateUserHandler,
-    // DeleteUserHandler,
-    // UpdateUserHandler,
+    CreateUserHandler,
+    DeleteUserHandler,
+    UpdateUserHandler,
+    UpdateUserPasswordHandler,
     // Queries
-    // CheckLoginBotHandler,
-    // CheckLoginHandler,
-    // SearchUsersHandler,
+    CheckLoginBotHandler,
+    CheckLoginHandler,
+    SearchUsersHandler,
     FindUserByIdHandler,
   ],
   controllers: [UserController],
@@ -42,4 +50,4 @@ import { CqrsModule } from '@nestjs/cqrs';
     USER_SERVICE
   ]
 })
-export class UserModule {}
+export class UserModule {} 
