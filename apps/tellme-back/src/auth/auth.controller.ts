@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Headers, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, HttpCode, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ClientCredentialsDto, JwtAuthGuard, LoginDto, RefreshDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto } from '@tellme/common';
 
@@ -25,11 +25,13 @@ export class AuthController {
     }
 
     @Post('login')
+    @HttpCode(200)
     async login(@Body() dto: LoginDto) {
         return this.authService.login(dto);
     }
 
     @Post('bot/login')
+    @HttpCode(200)
     async loginBot(@Body() dto: ClientCredentialsDto) {
         return this.authService.getBotToken(dto.id, dto.clientSecret);
     }
