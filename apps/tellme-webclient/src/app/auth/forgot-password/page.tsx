@@ -6,10 +6,10 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
 import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { useNotification } from "@/hooks/useNotification"
 import { FormField } from "@/components/ui/formField"
+import { validateAuthField } from "@/lib/validation"
 
 const login = "login"
 
@@ -18,6 +18,8 @@ export default function ForgotPasswordPage() {
   const router = useRouter()
 
   const { notification, type, showNotification } = useNotification()
+  const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
+
 
   const handleForgotPassword = (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,7 +56,11 @@ export default function ForgotPasswordPage() {
                 label="Email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  validateAuthField("email", e.target.value, setErrors)
+                }}
+                error={errors.email}
                 required
               />
             </div>

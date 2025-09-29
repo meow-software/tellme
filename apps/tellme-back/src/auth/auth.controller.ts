@@ -28,7 +28,7 @@ export class AuthController {
     @Post('login')
     @HttpCode(200)
     async login(@Body() dto: LoginDto, @Res() res: Response) {
-        const {pair, csrfToken} = await this.authService.login(dto);
+        const { pair, csrfToken } = await this.authService.login(dto);
 
         // Send cookies
         res.cookie('access_token', pair.accessToken, {
@@ -85,19 +85,19 @@ export class AuthController {
     @UseGuards(JwtAuthGuard)
     @Post('logout')
     async logout(@Req() req: Request, @Res() res: Response) {
-    let refreshToken;
-    try {
-        // get refresh token
-        const cookies = (req as any).cookies;
-        refreshToken = cookies['refresh_token'];
-            
-        if (!refreshToken) {
-            throw new BadRequestException('No refresh token found');
+        let refreshToken;
+        try {
+            // get refresh token
+            const cookies = (req as any).cookies;
+            refreshToken = cookies['refresh_token'];
+
+            if (!refreshToken) {
+                throw new BadRequestException('No refresh token found');
+            }
+        } catch (e) {
+            console.log('cookie: ', (req as any).cookies) // TODO : verifier 
+            console.log("DEBUG: Logout pas de refreshtoken?")
         }
-    }catch(e) {
-        console.log('cookie: ', (req as any).cookies) // TODO : verifier 
-        console.log("DEBUG: Logout pas de refreshtoken?")
-    }
         // remove coockie
         res.clearCookie('access_token', { httpOnly: true, sameSite: 'strict' })
         res.clearCookie('refresh_token', { httpOnly: true, sameSite: 'strict' })

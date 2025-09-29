@@ -7,6 +7,11 @@ import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { FormField } from "@/components/ui/formField"
 import SocialLoginButtons from "@/components/auth/SocialLoginButton"
 import { REGEX_USERNAME, REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
+import { useNotification } from "@/hooks/useNotification"
+import { register } from "@/lib/rest"
+import type { ApiResponse } from "@/lib"
+
+
 
 const login = "login"
 const passwordRegex = REGEX_PASSWORD
@@ -19,12 +24,37 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [pseudo, setPseudo] = useState("")
 
+  const { notification, type, showNotification } = useNotification()
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false)
 
 
   const handleSocialRegister = (provider: string) => {
     console.log(`Register with ${provider}`)
   }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || !confirmPassword || !pseudo || errors.email || errors.password || errors.confirmPassword || errors.pseudo) return;
+
+    setIsLoading(true);
+    setFormError(null); // Clear erros
+    try {
+      const res: ApiResponse = await register({ email, password, pseudo });
+      console.log("----res")
+      if (!res.success) {
+        setFormError(res.message || "Identifiants incorrects");
+        return;
+      }
+      showNotification("Register réussi: " + res.message, "success");
+    } catch (err: any) {
+      // networking error or 500
+      setFormError(err.response?.data?.message || "Une erreur est survenue.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
 
   return (
@@ -34,13 +64,17 @@ export default function SignupPage() {
         <div className="mx-auto w-full max-w-sm">
 
           {/* Title */}
-          <div className="mb-8">
+          <div className="mb-4">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
             <p className="text-gray-600">Join us to improve your sleep and bring peace to your life</p>
           </div>
 
+          {formError && (
+            <p className="text-sm text-red-600">{formError}</p>
+          )}
+
           {/* Social Login Buttons */}
-          <SocialLoginButtons mode="register" onClick={handleSocialRegister} />
+          <div className="mt-4"><SocialLoginButtons mode="register" onClick={handleSocialRegister} /></div>
 
           {/* Divider */}
           <div className="relative mb-6">

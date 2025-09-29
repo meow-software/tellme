@@ -3,13 +3,16 @@
 import type React from "react"
 import Link from "next/link"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { LoadingButton } from "@/components/ui/loadingButton"
 import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { useNotification } from "@/hooks/useNotification"
 import { FormField } from "@/components/ui/formField"
 import SocialLoginButtons from "@/components/auth/SocialLoginButton"
 
 import { REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
+import { login } from "@/lib/rest"
+import type { ApiResponse } from "@/lib"
+
 
 const forgotPassword = "forgot-password"
 const register = "register"
@@ -21,17 +24,47 @@ export default function SignInPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const { notification, type, showNotification } = useNotification()
-
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    showNotification("Login successful (demo)")
-  }
+  const [isLoading, setIsLoading] = useState(false)
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || errors.email || errors.password) return;
+
+    setIsLoading(true);
+    setFormError(null); // Clear erros
+
+    try {
+      const res: ApiResponse = await login({ email, password });
+      console.log("----res")
+
+      if (!res.success) {
+        setFormError(res.message || "Identifiants incorrects");
+        return;
+      }
+
+      showNotification("Login réussi: " + res.message, "success");
+    } catch (err: any) {
+      // networking error or 500
+      setFormError(err.response?.data?.message || "Une erreur est survenue.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSocialLogin = (provider: string) => {
     console.log(`Login with ${provider}`)
   }
+
+  const isFormInvalid =
+    !email ||
+    !password ||
+    !!errors.email ||
+    !!errors.password ||
+    isLoading
 
   return (
     <div className="min-h-screen flex">
@@ -45,13 +78,17 @@ export default function SignInPage() {
       <div className="flex-1 flex flex-col justify-center px-8 py-12 bg-white">
         <div className="mx-auto w-full max-w-sm">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-4">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Login</h1>
             <p className="text-gray-600">Enter to improve your sleep and bring peace to your life</p>
           </div>
 
+          {formError && (
+            <p className="text-sm text-red-600">{formError}</p>
+          )}
+
           {/* Social Login Buttons */}
-          <SocialLoginButtons mode="login" onClick={handleSocialLogin} />
+          <div className="mt-4"><SocialLoginButtons mode="login" onClick={handleSocialLogin} /></div>
 
           {/* Divider */}
           <div className="relative mb-6">
@@ -117,13 +154,14 @@ export default function SignInPage() {
                 Forgot your password?
               </Link>
             </div>
-
-            <Button
+            {/* todo faire un composant button loading  */}
+            <LoadingButton
               type="submit"
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full"
+              isLoading={isLoading}
+              disabled={isFormInvalid}
             >
               Login
-            </Button>
+            </LoadingButton>
 
             <div className="flex items-center gap-2">
               <span className="ml-2 text-sm text-gray-600">
