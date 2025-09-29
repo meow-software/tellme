@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS,  type IEventBus , JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession} from '@tellme/common';
+import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken } from '@tellme/common';
 
 @Injectable()
 export class AuthService extends AuthServiceAbstract {
@@ -13,10 +13,10 @@ export class AuthService extends AuthServiceAbstract {
         super(jwt, redisAuthService, eventBus);
     }
 
-  async findById(id: string): Promise<UserDTO | null> {
-    return this.userService.findById(id);  
-  } 
-  
+    async findById(id: string): Promise<UserDTO | null> {
+        return this.userService.findById(id);
+    }
+
     /**
      * Register: delegates user creation to the USER_SERVICE,
      * then issues an access/refresh token pair.
@@ -33,8 +33,8 @@ export class AuthService extends AuthServiceAbstract {
         this.confirmEmailRegister(token);
     }
 
-    async resendEmailConfirmRegister(id: Snowflake, header: any={}) {
-        const user = await this.userService.getMe( {id} ) as UserDTO;
+    async resendEmailConfirmRegister(id: Snowflake, header: any = {}) {
+        const user = await this.userService.getMe({ id }) as UserDTO;
 
         if (!user) throw new BadRequestException("No user found with this id.");
         if (user.isConfirmed) {
@@ -56,7 +56,7 @@ export class AuthService extends AuthServiceAbstract {
         if (!user) {
             throw new UnauthorizedException('Invalid credentials.');
         }
-        if (!user.isConfirmed) { 
+        if (!user.isConfirmed) {
             if (user.email) this.sendEmailConfirmation(user.id, user.email);
             throw new UnauthorizedException('Account not confirmed, confirmation email resent.');
         }
@@ -68,7 +68,10 @@ export class AuthService extends AuthServiceAbstract {
 
         // Store refresh in Redis (key = session, value = userId), TTL = refresh duration
         await this.redisAuthService.setJSON(buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
-        return pair;
+
+        // Generate CSRF token
+        const csrfToken = generateCsrfToken(rp.jti);
+        return { pair, csrfToken };
     }
 
     /**
@@ -147,7 +150,7 @@ export class AuthService extends AuthServiceAbstract {
      * Reset password demand
      */
     async resetPasswordDemand(userId: Snowflake, ctx: any) {
-        const user = await this.userService.getMe({...ctx, id: userId}) as UserDTO;
+        const user = await this.userService.getMe({ ...ctx, id: userId }) as UserDTO;
         if (!user) throw new BadRequestException("No user found with this email.");
         if (!user.email) throw new BadRequestException("User has no email, i can't help you.");
 
@@ -159,7 +162,7 @@ export class AuthService extends AuthServiceAbstract {
     /**
      * Reset password confirmation
      */
-    async resetPasswordConfirmation(dto : ResetPasswordConfirmationDto, headers: any = {}) {
+    async resetPasswordConfirmation(dto: ResetPasswordConfirmationDto, headers: any = {}) {
         // 1. Check OTP
         const match = this.checkOTP(dto.code);
         if (!match) return new UnauthorizedException("Invalid/expired token");
@@ -172,14 +175,16 @@ export class AuthService extends AuthServiceAbstract {
      * Logout: revokes the refresh token (deletes from Redis),
      * and optionally blacklists the current access token until its expiry.
      */
-    async logout(refreshToken: string, accessTokenJti?: string) {
-        try {
-            const decoded = await this.verifyRefresh(refreshToken);
-            await this.redisAuthService.del(buildRedisCacheKeyUserSession(decoded.sub, decoded.client, decoded.jti));
-        } catch {
-            // Refresh already invalid → ignore
+    async logout(refreshToken: string) {
+        if (refreshToken) {
+            try {
+                const decoded = await this.verifyRefresh(refreshToken);
+                await this.redisAuthService.del(buildRedisCacheKeyUserSession(decoded.sub, decoded.client, decoded.jti));
+            } catch {
+                // Refresh already invalid → ignore
+            }
         }
-        return { ok: true };
+        return 'Logged out';
     }
 
     /**
@@ -191,7 +196,7 @@ export class AuthService extends AuthServiceAbstract {
      */
     async getBotToken(id: string, token: string) {
         console.log("----l", id, token)
-        const bot: UserDTO | null = await this.userService.checkBotLogin(id, token) ;
+        const bot: UserDTO | null = await this.userService.checkBotLogin(id, token);
         if (!bot) throw new UnauthorizedException('Invalid bot credentials.');
         return this.generateJwtForBot({
             id: bot.id,

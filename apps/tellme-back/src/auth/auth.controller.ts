@@ -1,6 +1,7 @@
-import { BadRequestException, Body, Controller, Get, Headers, HttpCode, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, HttpCode, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ClientCredentialsDto, JwtAuthGuard, LoginDto, RefreshDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto } from '@tellme/common';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -26,8 +27,26 @@ export class AuthController {
 
     @Post('login')
     @HttpCode(200)
-    async login(@Body() dto: LoginDto) {
-        return this.authService.login(dto);
+    async login(@Body() dto: LoginDto, @Res() res: Response) {
+        const {pair, csrfToken} = await this.authService.login(dto);
+
+        // Send cookies
+        res.cookie('access_token', pair.accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+            maxAge: pair.ATExpiresIn,
+        });
+
+        res.cookie('refresh_token', pair.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+            maxAge: pair.RTExpiresIn,
+        });
+
+        // Return CSRF token for client
+        return { csrfToken: csrfToken };
     }
 
     @Post('bot/login')
@@ -65,8 +84,23 @@ export class AuthController {
 
     @UseGuards(JwtAuthGuard)
     @Post('logout')
-    async logout(@Body() dto: RefreshDto, @Req() req: Request) {
-        const accessJti = req.headers['x-access-jti'] as string | undefined;
-        return this.authService.logout(dto.refreshToken, accessJti);
+    async logout(@Req() req: Request, @Res() res: Response) {
+    let refreshToken;
+    try {
+        // get refresh token
+        const cookies = (req as any).cookies;
+        refreshToken = cookies['refresh_token'];
+            
+        if (!refreshToken) {
+            throw new BadRequestException('No refresh token found');
+        }
+    }catch(e) {
+        console.log('cookie: ', (req as any).cookies) // TODO : verifier 
+        console.log("DEBUG: Logout pas de refreshtoken?")
+    }
+        // remove coockie
+        res.clearCookie('access_token', { httpOnly: true, sameSite: 'strict' })
+        res.clearCookie('refresh_token', { httpOnly: true, sameSite: 'strict' })
+        return this.authService.logout(refreshToken);
     }
 }

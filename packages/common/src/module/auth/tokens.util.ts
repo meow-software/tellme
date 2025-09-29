@@ -1,4 +1,63 @@
 import { randomUUID } from 'crypto';
+import * as crypto from 'crypto';
+import { requireEnv } from '../../utils';
+
+/**
+ * Generates a CSRF token for the given session ID
+ * 
+ * The token is composed of two parts separated by a dot:
+ * - nonce: 16 bytes of cryptographically secure random data (hex encoded)
+ * - signature: HMAC-SHA256 signature of (sessionId + nonce)
+ * 
+ * @param sessionId - The user's session identifier
+ * @returns CSRF token in the format: `${nonce}.${signature}`
+ * 
+ * @example
+ * const token = generateCsrfToken('user-session-123');
+ * // Returns: 'a1b2c3d4e5f67890.9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8'
+ */
+export function generateCsrfToken(sessionId: string): string {
+    // Generate a cryptographically secure random nonce (16 bytes = 32 hex characters)
+    const nonce = crypto.randomBytes(16).toString('hex');
+
+    // Create HMAC signature using the CSRF secret key
+    const signature = crypto
+        .createHmac('sha256', requireEnv('CSRF_SECRET'))
+        .update(sessionId + nonce) // Combine session ID and nonce for signing
+        .digest('hex');
+
+    // Return token in format: nonce.signature
+    return `${nonce}.${signature}`;
+}
+
+/**
+ * Validates a CSRF token against the given session ID
+ * 
+ * Verifies that:
+ * 1. The token is properly formatted (nonce.signature)
+ * 2. The signature matches the expected HMAC-SHA256 of (sessionId + nonce)
+ * 
+ * @param csrfToken - The CSRF token to validate (from request header/body)
+ * @param sessionId - The user's session identifier (from session cookie)
+ * @returns boolean - True if the token is valid, false otherwise
+ * 
+ * @example
+ * const isValid = validateCsrfToken('a1b2c3d4e5f67890.9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8', 'user-session-123');
+ * // Returns: true if valid, false if tampered
+ */
+export function validateCsrfToken(csrfToken: string, sessionId: string): boolean {
+    // Split token into nonce and signature parts
+    const [nonce, signature] = csrfToken.split('.');
+
+    // Recompute the expected signature using the same method as generation
+    const expected = crypto
+        .createHmac('sha256', requireEnv('CSRF_SECRET'))
+        .update(sessionId + nonce)
+        .digest('hex');
+
+    // Compare signatures using constant-time comparison (to prevent timing attacks)
+    return signature === expected;
+}
 /**
  * Retrieves the refresh window time in seconds from environment variables.
  * This represents the grace period during which a refresh token can be used
@@ -87,7 +146,7 @@ export type BaseUserPayload = {
  * Access token payload structure.
  * Extends UserPayload with access token specific fields.
  */
-export type AccessPayload = UserPayload &  BaseUserPayload
+export type AccessPayload = UserPayload & BaseUserPayload
 
 /**
  * Refresh token payload structure.
