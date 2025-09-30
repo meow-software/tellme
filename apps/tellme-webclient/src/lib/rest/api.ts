@@ -41,4 +41,9 @@ api.interceptors.response.use(
   }
 )
 
-export { api as API };
+
+const anonymousAPI = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+})
+
+export { api as API, anonymousAPI as AnonymousAPI };

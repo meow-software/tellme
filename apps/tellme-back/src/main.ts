@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
-import { HttpExceptionFilter, ResponseInterceptor } from '@tellme/common';
+import { HttpExceptionFilter, requireEnv, ResponseInterceptor } from '@tellme/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,7 +20,15 @@ async function bootstrap() {
   );
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
-  const port = process.env.PORT ?? 3000;
+
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    credentials: true,          
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  const port = process.env.PORT ?? 3001;
   await app.listen(port);
   console.log(`Tellme Backend listening on port ${port}.`);
 }

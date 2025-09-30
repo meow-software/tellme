@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { FormField } from "@/components/ui/formField"
 import SocialLoginButtons from "@/components/auth/SocialLoginButton"
@@ -10,15 +9,14 @@ import { REGEX_USERNAME, REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@
 import { useNotification } from "@/hooks/useNotification"
 import { register } from "@/lib/rest"
 import type { ApiResponse } from "@/lib"
-
-
-
-const login = "login"
-const passwordRegex = REGEX_PASSWORD
-const usernameRegex = REGEX_USERNAME
-const mailRegex = REGEX_MAIL
+import { LoadingButton } from "@/components/ui/loadingButton"
 
 export default function SignupPage() {
+  const login = "login"
+  const passwordRegex = REGEX_PASSWORD
+  const usernameRegex = REGEX_USERNAME
+  const mailRegex = REGEX_MAIL
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -27,35 +25,37 @@ export default function SignupPage() {
   const { notification, type, showNotification } = useNotification()
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
   const [formError, setFormError] = useState<string | null>(null);
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false)
-
 
   const handleSocialRegister = (provider: string) => {
     console.log(`Register with ${provider}`)
   }
+
+  const isFormInvalid = !email || !password || !confirmPassword || !pseudo || !!errors.email || !!errors.password || !!errors.confirmPassword || !!errors.pseudo || isLoading;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !confirmPassword || !pseudo || errors.email || errors.password || errors.confirmPassword || errors.pseudo) return;
+    // if (!email || !password || !confirmPassword || !pseudo || errors.email || errors.password || errors.confirmPassword || errors.pseudo) return;
+    if (isFormInvalid) return;
 
     setIsLoading(true);
     setFormError(null); // Clear erros
+    setFormSuccess(null); // Clear erros
+
+    let res: ApiResponse;
     try {
-      const res: ApiResponse = await register({ email, password, pseudo });
-      console.log("----res")
-      if (!res.success) {
-        setFormError(res.message || "Identifiants incorrects");
-        return;
-      }
-      showNotification("Register réussi: " + res.message, "success");
+      res = await register({ email, username: pseudo, password });
+
+      setFormSuccess(res.data.message);
     } catch (err: any) {
       // networking error or 500
-      setFormError(err.response?.data?.message || "Une erreur est survenue.");
+      res = err.response?.data;
+      setFormError(res.errors.message || "An error has occurred. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   };
-
-
 
   return (
     <div className="min-h-screen flex">
@@ -68,10 +68,6 @@ export default function SignupPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
             <p className="text-gray-600">Join us to improve your sleep and bring peace to your life</p>
           </div>
-
-          {formError && (
-            <p className="text-sm text-red-600">{formError}</p>
-          )}
 
           {/* Social Login Buttons */}
           <div className="mt-4"><SocialLoginButtons mode="register" onClick={handleSocialRegister} /></div>
@@ -86,8 +82,16 @@ export default function SignupPage() {
             </div>
           </div>
 
+          {formError && (
+            <p className="text-sm text-red-600 mb-3 mt-3">{formError}</p>
+          )}
+
+          {formSuccess && (
+            <p className="text-sm text-green-600 mb-3 mt-3">{formSuccess}</p>
+          )}
+
           {/* Signup Form */}
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <FormField
                 id="pseudo"
@@ -148,7 +152,7 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value)
-                  validateAuthField("confirmPassword", e.target.value, setErrors)
+                  validateAuthField("confirmPassword", e.target.value, setErrors, password)
                 }}
                 error={errors.confirmPassword}
                 pattern={passwordRegex}
@@ -156,13 +160,13 @@ export default function SignupPage() {
               />
             </div>
 
-            <Button
+            <LoadingButton
               type="submit"
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full"
-              disabled={Object.values(errors).some(Boolean)}
+              isLoading={isLoading}
+              disabled={isFormInvalid}
             >
-              Create Account
-            </Button>
+              Login
+            </LoadingButton>
 
             <div className="flex items-center gap-2">
               <span className="ml-2 text-sm text-gray-600">

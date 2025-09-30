@@ -1,27 +1,32 @@
-import { API } from './api';
-// import api from './api';
-
+import { AnonymousAPI } from './api';
 
 interface LoginPayload {
-  email: string;
+  usernameOrEmail: string;
   password: string;
 }
 
-export async function login({ email, password }: LoginPayload) {
-  const response = await API.post('/auth/login', {
-    email,
+interface RegisterPayload {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export async function login({ usernameOrEmail, password }: LoginPayload) {
+  const response = await AnonymousAPI.post('/auth/login', {
+    usernameOrEmail,
     password,
   });
-  
-  if (response.data.csrfToken) {
-    localStorage.setItem('csrfToken', response.data.csrfToken);
+
+  if (response.data.data.csrfToken) {
+    localStorage.setItem('csrfToken', response.data.data.csrfToken);
   }
   return response.data;
 }
 
-export async function register ({ email, password }: LoginPayload) {
-  const response = await API.post('/auth/register', {
+export async function register({ email, username, password }: RegisterPayload) {
+  const response = await AnonymousAPI.post('/auth/register', {
     email,
+    username,
     password,
   });
   return response.data;

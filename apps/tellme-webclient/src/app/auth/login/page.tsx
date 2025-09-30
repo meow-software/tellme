@@ -8,19 +8,17 @@ import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { useNotification } from "@/hooks/useNotification"
 import { FormField } from "@/components/ui/formField"
 import SocialLoginButtons from "@/components/auth/SocialLoginButton"
-
 import { REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
 import { login } from "@/lib/rest"
 import type { ApiResponse } from "@/lib"
 
 
-const forgotPassword = "forgot-password"
-const register = "register"
-const passwordRegex = REGEX_PASSWORD
-const mailRegex = REGEX_MAIL
-
-
 export default function SignInPage() {
+  const forgotPassword = "forgot-password"
+  const register = "register"
+  const passwordRegex = REGEX_PASSWORD
+  const mailRegex = REGEX_MAIL
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const { notification, type, showNotification } = useNotification()
@@ -29,27 +27,34 @@ export default function SignInPage() {
 
   const [isLoading, setIsLoading] = useState(false)
 
+  const isFormInvalid =
+    !email ||
+    !password ||
+    !!errors.email ||
+    !!errors.password ||
+    isLoading
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || errors.email || errors.password) return;
+    // if (!email || !password || errors.email || errors.password) return;
+    if (isFormInvalid) return;
 
     setIsLoading(true);
     setFormError(null); // Clear erros
-
+    let res: ApiResponse;
     try {
-      const res: ApiResponse = await login({ email, password });
-      console.log("----res")
+      res = await login({ usernameOrEmail: email, password });
 
       if (!res.success) {
-        setFormError(res.message || "Identifiants incorrects");
+        setFormError(res.data.message || "Incorrect credentials.");
         return;
       }
 
-      showNotification("Login réussi: " + res.message, "success");
+      showNotification("Login réussi, bienvenue " + res.data.user.username);
     } catch (err: any) {
       // networking error or 500
-      setFormError(err.response?.data?.message || "Une erreur est survenue.");
+      res = err.response?.data;
+      setFormError(res.errors.message || "An error has occurred. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -58,13 +63,6 @@ export default function SignInPage() {
   const handleSocialLogin = (provider: string) => {
     console.log(`Login with ${provider}`)
   }
-
-  const isFormInvalid =
-    !email ||
-    !password ||
-    !!errors.email ||
-    !!errors.password ||
-    isLoading
 
   return (
     <div className="min-h-screen flex">
@@ -83,10 +81,6 @@ export default function SignInPage() {
             <p className="text-gray-600">Enter to improve your sleep and bring peace to your life</p>
           </div>
 
-          {formError && (
-            <p className="text-sm text-red-600">{formError}</p>
-          )}
-
           {/* Social Login Buttons */}
           <div className="mt-4"><SocialLoginButtons mode="login" onClick={handleSocialLogin} /></div>
 
@@ -99,6 +93,10 @@ export default function SignInPage() {
               <span className="px-2 bg-white text-gray-500">or</span>
             </div>
           </div>
+
+          {formError && (
+            <p className="text-sm text-red-600 mb-3 mt-3">{formError}</p>
+          )}
 
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

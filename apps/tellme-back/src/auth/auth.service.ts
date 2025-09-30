@@ -68,10 +68,10 @@ export class AuthService extends AuthServiceAbstract {
 
         // Store refresh in Redis (key = session, value = userId), TTL = refresh duration
         await this.redisAuthService.setJSON(buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
-
+    
         // Generate CSRF token
         const csrfToken = generateCsrfToken(rp.jti);
-        return { pair, csrfToken };
+        return { pair, csrfToken , user};
     }
 
     /**

@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Headers, HttpCode, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ClientCredentialsDto, JwtAuthGuard, LoginDto, RefreshDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto } from '@tellme/common';
+import { ClientCredentialsDto, envIsProd, JwtAuthGuard, LoginDto, RefreshDto, RegisterDto, requireEnv, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto } from '@tellme/common';
 import type { Response } from 'express';
 
 @Controller('auth')
@@ -27,26 +27,24 @@ export class AuthController {
 
     @Post('login')
     @HttpCode(200)
-    async login(@Body() dto: LoginDto, @Res() res: Response) {
-        const { pair, csrfToken } = await this.authService.login(dto);
-
+    async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+        const { pair, csrfToken, user } = await this.authService.login(dto);
+        
         // Send cookies
         res.cookie('access_token', pair.accessToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'strict',
-            maxAge: pair.ATExpiresIn,
+            maxAge: pair.ATExpiresIn * 1000,
         });
-
         res.cookie('refresh_token', pair.refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'strict',
-            maxAge: pair.RTExpiresIn,
+            maxAge: pair.RTExpiresIn * 1000,
         });
-
         // Return CSRF token for client
-        return { csrfToken: csrfToken };
+        return { csrfToken, user };
     }
 
     @Post('bot/login')
@@ -84,7 +82,7 @@ export class AuthController {
 
     @UseGuards(JwtAuthGuard)
     @Post('logout')
-    async logout(@Req() req: Request, @Res() res: Response) {
+    async logout(@Req() req: Request,  @Res({ passthrough: true }) res: Response) {
         let refreshToken;
         try {
             // get refresh token
