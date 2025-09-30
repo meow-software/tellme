@@ -1,4 +1,4 @@
-import { AnonymousAPI } from './api';
+import { API } from './api';
 
 interface LoginPayload {
   usernameOrEmail: string;
@@ -12,7 +12,7 @@ interface RegisterPayload {
 }
 
 export async function login({ usernameOrEmail, password }: LoginPayload) {
-  const response = await AnonymousAPI.post('/auth/login', {
+  const response = await API.post('/auth/login', {
     usernameOrEmail,
     password,
   });
@@ -24,7 +24,7 @@ export async function login({ usernameOrEmail, password }: LoginPayload) {
 }
 
 export async function register({ email, username, password }: RegisterPayload) {
-  const response = await AnonymousAPI.post('/auth/register', {
+  const response = await API.post('/auth/register', {
     email,
     username,
     password,

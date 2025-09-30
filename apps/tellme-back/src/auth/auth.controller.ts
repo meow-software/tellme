@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Headers, HttpCode, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ClientCredentialsDto, envIsProd, JwtAuthGuard, LoginDto, RefreshDto, RegisterDto, requireEnv, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto } from '@tellme/common';
+import { ClientCredentialsDto, JwtAuthGuard, LoginDto, RefreshDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto } from '@tellme/common';
 import type { Response } from 'express';
 
 @Controller('auth')

@@ -7,7 +7,6 @@ import { HttpExceptionFilter, requireEnv, ResponseInterceptor } from '@tellme/co
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
-  app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Removes properties not defined in the DTO
@@ -22,10 +21,15 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.enableCors({
-    origin: 'http://localhost:3000',
-    credentials: true,          
+    origin: [
+      'http://localhost:3000',
+    ],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-CSRF-Token',],
   });
 
   const port = process.env.PORT ?? 3001;

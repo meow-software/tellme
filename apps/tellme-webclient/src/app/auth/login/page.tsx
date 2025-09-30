@@ -54,7 +54,7 @@ export default function SignInPage() {
     } catch (err: any) {
       // networking error or 500
       res = err.response?.data;
-      setFormError(res.errors.message || "An error has occurred. Please try again later.");
+      if (res && res.errors) setFormError(res.errors.message || "An error has occurred. Please try again later.");
     } finally {
       setIsLoading(false);
     }
