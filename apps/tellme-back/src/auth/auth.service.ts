@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken } from '@tellme/common';
+import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken, validateCsrfToken } from '@tellme/common';
+import { decode } from 'punycode';
 
 @Injectable()
 export class AuthService extends AuthServiceAbstract {
@@ -64,85 +65,87 @@ export class AuthService extends AuthServiceAbstract {
         const payload: UserPayload = { sub: String(user.id), email: user.email, client: 'user' };
         const issuePair = await this.issuePair(payload);
         const rp = issuePair.payload.refreshPayload;
+        const ap = issuePair.payload.accessPayload;
         const pair = issuePair.pair;
 
         // Store refresh in Redis (key = session, value = userId), TTL = refresh duration
         await this.redisAuthService.setJSON(buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
-    
+
         // Generate CSRF token
-        const csrfToken = generateCsrfToken(rp.jti);
-        return { pair, csrfToken , user};
+        const rpCsrfToken = generateCsrfToken(rp.jti);
+        const apCsrfToken = generateCsrfToken(ap.jti);
+        return { pair, refreshCsrfToken: rpCsrfToken, accessCsrfToken: apCsrfToken, user };
     }
 
     /**
-     * Refresh: requires both refresh token and (optionally) access token.
-     * Rules:
-     *  - Access token must be expired, but within REFRESH_WINDOW_SECONDS (default: 300s = 5 min).
-     *  - Refresh token must still be valid.
-     *  - If refresh is expired but access expired just recently (grace period),
-     *    allow re-issuing tokens based on access claims.
+     * Refresh the access token using a valid refresh token.
+     *
+     * Workflow:
+     * 1. Validate the refresh token's signature (JWT).
+     * 2. Ensure the refresh token still exists in Redis (not revoked/rotated out).
+     * 3. Validate the CSRF token using the refresh token's JTI.
+     * 4. Invalidate the old refresh token in Redis (rotation).
+     * 5. Issue a new access/refresh token pair.
+     * 6. Store the new refresh token in Redis with its TTL.
+     *
+     * @param refreshToken - The refresh token provided by the client.
+     * @param xCsrfToken - CSRF token to protect against cross-site request forgery.
+     * @returns A new pair of tokens: accessToken, refreshToken, ATExpiresIn, RTExpiresIn.
+     * @throws UnauthorizedException - If the refresh token is invalid, expired, or revoked.
+     * @throws ForbiddenException - If the CSRF token does not match the refresh token's JTI.
      */
-    async refresh(refreshToken: string, accessToken?: string) {
-        const nowSec = Math.floor(Date.now() / 1000);
-
-        // 1) Access token is mandatory for refresh.
-        if (!accessToken) {
-            throw new BadRequestException('Access token required for refresh.');
-        }
-
-        const decodedAccess: any = this.jwt.decode(accessToken);
-        if (!decodedAccess || typeof decodedAccess.exp !== 'number') {
-            throw new UnauthorizedException('Invalid access token provided.');
-        }
-
-        const exp = decodedAccess.exp as number;
-        const expiredSince = nowSec - exp;
-
-        // 2) Try to verify refresh token
+    async refresh(refreshToken: string, xCsrfToken: string) {
+        // 1) Decode and verify the refresh token signature
         let decodedRefresh: RefreshPayload | null = null;
         try {
             decodedRefresh = await this.verifyRefresh(refreshToken);
         } catch {
-            // Refresh invalid or expired → continue to fallback
+            throw new UnauthorizedException('Invalid or expired refresh token.');
         }
 
-        // Case A: Refresh valid → normal workflow
-        if (decodedRefresh) {
-            if (exp > nowSec) {
-                throw new ForbiddenException('Access token still valid — too early to refresh.');
-            }
-            if (expiredSince > getRefreshWindowSeconds()) {
-                throw new ForbiddenException('Access expired too long ago — refresh window exceeded.');
-            }
+        // 2) Verify the refresh token still exists in Redis (active session)
+        const redisKey = buildRedisCacheKeyUserSession(
+            decodedRefresh.sub,
+            decodedRefresh.client,
+            decodedRefresh.jti,
+        );
 
-            // 1. Invalidate the old refresh token (rotation)
-            await this.redisAuthService.del(buildRedisCacheKeyUserSession(decodedRefresh.sub, decodedRefresh.client, decodedRefresh.jti));
-
-            // 2. Put new key
-            const payload: UserPayload = { sub: String(decodedRefresh.sub), email: decodedRefresh.email, roles: decodedRefresh.roles, client: decodedRefresh.client };
-            const issuePair = await this.issuePair(payload);
-            const rp = issuePair.payload.refreshPayload;
-            const pair = issuePair.pair;
-
-            // Store refresh in Redis (key = session, value = userId), TTL = refresh duration
-            await this.redisAuthService.setJSON(buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
-            return pair;
+        const session = await this.redisAuthService.getJSON(redisKey);
+        if (!session) {
+            throw new UnauthorizedException('Refresh token is invalid or has been revoked.');
+        }
+        // 3) Validate CSRF token against refresh token's JTI
+        if (!validateCsrfToken(xCsrfToken, decodedRefresh.jti)) {
+            throw new ForbiddenException('Invalid CSRF token.');
         }
 
-        // Case B: Refresh expired, but access just expired (grace period)
-        if (expiredSince > 0 && expiredSince <= getRefreshWindowSeconds()) {
-            const payload: UserPayload = { sub: String(decodedAccess.sub), email: decodedAccess.email, roles: decodedAccess.roles, client: decodedAccess.client };
-            const issuePair = await this.issuePair(payload);
-            const rp = issuePair.payload.refreshPayload;
-            const pair = issuePair.pair;
+        // 4) Invalidate the old refresh token in Redis (rotation)
+        await this.redisAuthService.del(redisKey);
 
-            // Store refresh in Redis (key = session, value = userId), TTL = refresh duration
-            await this.redisAuthService.setJSON(buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti), { uid: rp.sub }, pair.RTExpiresIn);
-            return pair;
-        }
+        // 5) Issue a new access/refresh token pair
+        const payload: UserPayload = {
+            sub: String(decodedRefresh.sub),
+            email: decodedRefresh.email,
+            roles: decodedRefresh.roles,
+            client: decodedRefresh.client,
+        };
 
-        // Case C: Both tokens invalid or outside allowed window
-        throw new UnauthorizedException('Session expired — please log in again.');
+        const issuePair = await this.issuePair(payload);
+        const rp = issuePair.payload.refreshPayload;
+        const ap = issuePair.payload.accessPayload;
+        const pair = issuePair.pair;
+
+        // 6) Store the new refresh token in Redis with its TTL
+        await this.redisAuthService.setJSON(
+            buildRedisCacheKeyUserSession(rp.sub, rp.client, rp.jti),
+            { uid: rp.sub },
+            pair.RTExpiresIn, // refresh token time-to-live
+        );
+
+        // Generate CSRF token
+        const rpCsrfToken = generateCsrfToken(rp.jti);
+        const apCsrfToken = generateCsrfToken(ap.jti);
+        return { pair, refreshCsrfToken: rpCsrfToken, accessCsrfToken: apCsrfToken };
     }
 
 

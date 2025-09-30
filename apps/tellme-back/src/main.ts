@@ -2,7 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
-import { HttpExceptionFilter, requireEnv, ResponseInterceptor } from '@tellme/common';
+import { HttpExceptionFilter, ResponseInterceptor } from '@tellme/common';
+import cookieParser from 'cookie-parser'; 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,11 +28,12 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'X-CSRF-Token',],
+      'Content-Type',
+      'Authorization',
+      'X-CSRF-Token', 
+    ],
   });
-
+  app.use(cookieParser());
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
   console.log(`Tellme Backend listening on port ${port}.`);

@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Headers, HttpCode, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ClientCredentialsDto, JwtAuthGuard, LoginDto, RefreshDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto } from '@tellme/common';
+import { ClientCredentialsDto, JwtAuthGuard, LoginDto, RefreshDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto, RefreshTokenGuard } from '@tellme/common';
 import type { Response } from 'express';
 
 @Controller('auth')
@@ -25,12 +25,7 @@ export class AuthController {
         return this.authService.resendEmailConfirmRegister(dto.id, req.headers);
     }
 
-    @Post('login')
-    @HttpCode(200)
-    async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-        const { pair, csrfToken, user } = await this.authService.login(dto);
-        
-        // Send cookies
+    private buildSession(res, pair, refreshCsrfToken, accessCsrfToken) {
         res.cookie('access_token', pair.accessToken, {
             httpOnly: true,
             secure: true,
@@ -44,7 +39,15 @@ export class AuthController {
             maxAge: pair.RTExpiresIn * 1000,
         });
         // Return CSRF token for client
-        return { csrfToken, user };
+        return { refreshCsrfToken, accessCsrfToken };
+    }
+
+    @Post('login')
+    @HttpCode(200)
+    async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+        const { pair, refreshCsrfToken, accessCsrfToken, user } = await this.authService.login(dto);
+        // Return CSRF token for client
+        return { ...this.buildSession(res, pair, refreshCsrfToken, accessCsrfToken), user };
     }
 
     @Post('bot/login')
@@ -53,13 +56,17 @@ export class AuthController {
         return this.authService.getBotToken(dto.id, dto.clientSecret);
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(RefreshTokenGuard)  
     @Post('refresh')
+    @HttpCode(200)
     async refresh(
-        @Body() dto: RefreshDto,
-        @Headers('authorization') authorization?: string) {
-        const accessToken = authorization?.replace('Bearer ', '');
-        return this.authService.refresh(dto.refreshToken, accessToken);
+        @Req() req: any,
+        @Res({ passthrough: true }) res: Response
+    ) {
+        // Refresh must be send by body or coockie, check RefreshTokenGuard
+        const { pair, refreshCsrfToken, accessCsrfToken } = await this.authService.refresh(req.refreshToken, req.refreshXCsrfHeader);
+        // Return CSRF token for client
+        return this.buildSession(res, pair, refreshCsrfToken, accessCsrfToken);
     }
 
     @Post('reset-password/demand')
@@ -82,7 +89,7 @@ export class AuthController {
 
     @UseGuards(JwtAuthGuard)
     @Post('logout')
-    async logout(@Req() req: Request,  @Res({ passthrough: true }) res: Response) {
+    async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         let refreshToken;
         try {
             // get refresh token
