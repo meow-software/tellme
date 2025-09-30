@@ -12,6 +12,9 @@ import { REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
 import { login } from "@/lib/rest"
 import type { ApiResponse } from "@/lib"
 
+// import { useAuthStore } from "@/store";
+
+import { useAuth } from '@/hooks/useAuth'
 
 export default function SignInPage() {
   const forgotPassword = "forgot-password"
@@ -64,8 +67,31 @@ export default function SignInPage() {
     console.log(`Login with ${provider}`)
   }
 
+  // const { user, loading } = useAuth()
+
+  const { user, loading, logout } = useAuth()
   return (
     <div className="min-h-screen flex">
+      {/* <header>
+        {loading ? (
+          <p>Chargement...</p>
+        ) : user ? (
+          <p>Connecté : {user.username}</p>
+        ) : (
+          <p>Invité</p>
+        )}
+      </header> */}
+
+      <header>
+        {user ? (
+          <>
+            <span>Bonjour, {user.username}</span>
+            <button onClick={logout}>Se déconnecter</button>
+          </>
+        ) : (
+          <span>Non connecté</span>
+        )}
+      </header>
       {notification && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg">
           {notification}

@@ -1,4 +1,5 @@
-import { API } from './api';
+import { API } from '@/lib';
+import { access } from 'fs';
 
 interface LoginPayload {
   usernameOrEmail: string;
@@ -31,4 +32,26 @@ export async function register({ email, username, password }: RegisterPayload) {
   });
   return response.data;
 
+}
+
+export async function me(){
+  return {
+    email : "test@est",
+    username : "test",
+    id: "8777877"
+  }
+}
+export async function logout() {}
+export async function refresh() {
+  return {
+    accessXCsrfToken: "jhijo",
+    refreshXCsrfToken: "jhijo"
+  }
+}
+
+export const authService = {
+  me: me,
+  login: login,
+  logout: logout,
+  refresh: refresh,
 }

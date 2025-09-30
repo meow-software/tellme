@@ -1,29 +1,36 @@
-import { API } from '@/lib'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+'use client'
 
-export function useAuth(redirectTo: string = '/login') {
-  const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState(null)
-  const router = useRouter()
+import { useEffect } from 'react'
+import { useAuthStore } from '@/store'
 
+export const useAuth = () => {
+  const {
+    user,
+    loading,
+    error,
+    fetchUser,
+    login,
+    logout,
+    refresh,
+    clearAuth,
+    accessXCsrfToken,
+    refreshXCsrfToken,
+  } = useAuthStore()
+
+  // Auto load user on mount
   useEffect(() => {
-    API.get('/api/me', { withCredentials: true })
-      .then(res => setUser(res.data))
-      .catch(() => router.push(redirectTo))
-      .finally(() => setLoading(false))
-  }, [])
+    fetchUser()
+  }, [fetchUser])
 
-  return { user, loading }
+  return {
+    user,
+    loading,
+    error,
+    login,
+    logout,
+    refresh,
+    clearAuth,
+    accessXCsrfToken,
+    refreshXCsrfToken,
+  }
 }
-
-
-/*
-export default function DashboardPage() {
-  const { user, loading } = useAuth()
-
-  if (loading) return <div>Loading...</div>
-  return <div>Welcome {user?.username}</div>
-}
-
-*/
