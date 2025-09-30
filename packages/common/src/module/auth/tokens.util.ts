@@ -89,7 +89,7 @@ export function getBotAccessTtl(): number {
  * @returns {number} TTL in seconds for refresh tokens
  */
 export function getRefreshTtl(): number {
-    return parseInt(process.env.REFRESH_TOKEN_TTL ?? '2592000', 10); // 30 days
+    return parseInt(process.env.REFRESH_TOKEN_TTL ?? '604800', 10); // 7 days
 }
 
 /**
