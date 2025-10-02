@@ -1,4 +1,4 @@
-import { ResetPasswordEmail, WelcomeEmail } from "../src";
+import { ResetPasswordEmail, WelcomeEmail, PasswordChangedEmail } from "./../src";
 
 export const EMAIL_COMPONENTS: {
   id: string;
@@ -17,12 +17,22 @@ export const EMAIL_COMPONENTS: {
       }
     },
     {
-      id: "reset",
+      id: "reset-password",
       name: "Reset Password Email",
       component: ResetPasswordEmail,
       props: {
         resetUrl: "https://example.com/reset",
-        username: "Bob"
+        email: "Bob@example.com",
+        code: "123456"
+      }
+    },
+    {
+      id: "password-changed",
+      name: "Password Changed Email",
+      component: PasswordChangedEmail,
+      props: {
+        email: "Charlie@example.com",
+        loginUrl: "https://example.com/login"
       }
     }
   ];

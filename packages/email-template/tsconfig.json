@@ -15,7 +15,12 @@
     "experimentalDecorators": true,  // Enables support for experimental decorators in TypeScript.
     "emitDecoratorMetadata": true,  // Enables the generation of metadata for decorators, necessary for NestJS.
     "moduleResolution": "node",  // Specifies how modules get resolved. "node" is for Node.js module resolution.
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+      "baseUrl": "./src", 
+    "paths": {
+      "@/*": ["*"]        // @/  src/
+    }
   },
   "include": [ "src/**/*", "preview/App.tsx"], // Specifies the files or directories to be included in the compilation process.
+
 }
