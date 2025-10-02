@@ -1,15 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { render } from '@react-email/render';
 import { AbstractEmail, EmailPayload } from './email.abstract';
-// import { transporter } from './email.config';
+import { transporter } from './email.config';
 
 @Injectable()
 export class MailerService  {
     private readonly logger = new Logger(MailerService .name);
 
     async send(emailTemplate: AbstractEmail, payload: EmailPayload): Promise<void> {
-        console.log("mail envoyer")
-        /*
         try {
             const html = await render(emailTemplate.render(payload.variables));
             const text =
@@ -29,6 +27,5 @@ export class MailerService  {
             this.logger.error(`❌ Erreur lors de l'envoi du mail à ${payload.to}`, error);
             throw error;
         }
-            */
     }
 }

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Email } from '../email';
-import { WelcomeEmail, WelcomeEmailProps } from '../templates/WelcomeEmail';
-import { ResetPasswordEmail, ResetPasswordEmailProps } from '../templates/ResetPasswordEmail';
+import { WelcomeEmail, WelcomeEmailProps, ResetPasswordEmail, ResetPasswordEmailProps } from '@tellme/email-template';
 
 @Injectable()
 export class AuthEmailService {
