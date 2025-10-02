@@ -2,7 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UpdateUserCommand } from '../update-user.command';
 import { BadRequestException, Inject } from '@nestjs/common';
 import { UserRepository } from '@tellme/database';
-import { buildRedisCacheKeyUser, EVENT_BUS, type IRedisService, REDIS_SERVICE, type IEventBus, EB_USER_UPDATED } from '@tellme/common';
+import { buildRedisCacheKeyUser, EVENT_BUS, type IRedisService, REDIS_SERVICE, type IEventBus, EB } from '@tellme/common';
 
 @CommandHandler(UpdateUserCommand)
 export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
@@ -15,7 +15,7 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
   async execute(command: UpdateUserCommand) {
     const { id } = command;
     let { dto } = command;
-    
+
     if (Object.keys(dto).length === 0) {
       throw new BadRequestException('No fields to update.');
     }
@@ -25,12 +25,15 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
     // invalidate cache
     await this.redisService.del(buildRedisCacheKeyUser(id));
     // publish event
-    await this.eventBus.publish(EB_USER_UPDATED, {
-      id: user.id,
-      username: user.username,
-      updated: {
-        ...dto
-      },
+    await this.eventBus.publish(EB.CHANNEL.USER, {
+      type: EB.USER.UPDATED,
+      data: {
+        id: user.id,
+        username: user.username,
+        updated: {
+          ...dto
+        },
+      }
     });
     return user;
   }

@@ -25,7 +25,7 @@ export class AuthService extends AuthServiceAbstract {
     async registerUser(dto: RegisterDto) {
         const user = await this.userService.registerUser(dto) as UserDTO;
         if (!user) throw new BadRequestException('User registration failed.')
-        if (user.email) this.sendEmailConfirmation(user.id, user.email);
+        if (user.email) this.sendEmailConfirmation(user.id, user);
         const payload: UserPayload = { sub: user.id.toString(), email: user.email, client: 'user' };
         return { ...this.issuePair(payload), message: "Check your email to confirm your account." };
     }
@@ -42,7 +42,7 @@ export class AuthService extends AuthServiceAbstract {
             throw new BadRequestException("Account already confirmed.");
         }
 
-        if (user.email) this.sendEmailConfirmation(user.id, user.email);
+        if (user.email) this.sendEmailConfirmation(user.id, user);
         return { success: true, message: "Confirmation email resent." };
     }
 
@@ -58,7 +58,7 @@ export class AuthService extends AuthServiceAbstract {
             throw new UnauthorizedException('Invalid credentials.');
         }
         if (!user.isConfirmed) {
-            if (user.email) this.sendEmailConfirmation(user.id, user.email);
+            if (user.email) this.sendEmailConfirmation(user.id, user);
             throw new UnauthorizedException('Account not confirmed, confirmation email resent.');
         }
 

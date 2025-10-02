@@ -6,19 +6,17 @@ import { AuthModule } from './auth/auth.module';
 import { AuthCommonModule } from '@tellme/common';
 import { UserModule } from './user/user.module';
 import { DatabaseService } from '@tellme/database';
+import { NotificationModule } from './notification/notification.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      // envFilePath: [
-      //   path.resolve(__dirname, '../../../.env'), // turbo .env
-      //   path.resolve(__dirname, './.env'), // local .env
-      // ]
     }),
     AuthModule,  
     AuthCommonModule, 
-    UserModule
+    UserModule, NotificationModule, EmailModule
   ],
   controllers: [AppController],
   providers: [

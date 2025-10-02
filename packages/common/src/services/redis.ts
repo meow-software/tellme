@@ -217,6 +217,7 @@ export abstract class RedisEventBus extends AbstractRedisPubSub implements IEven
    * @param callback - Function invoked for each received message
    */
   subscribe(channel: string, callback: (message: any) => void) {
+    this.getSubscriber().subscribe(channel);
     super.onMessage((ch, msg) => {
       if (ch === channel) callback(JSON.parse(msg));
     });

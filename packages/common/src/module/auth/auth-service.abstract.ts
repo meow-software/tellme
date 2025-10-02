@@ -12,13 +12,14 @@ import {
   IEventBus,
   Snowflake,
   requireEnv,
-  IRedisAuthService
+  IRedisAuthService,
+  UserDTO,
+  EB
 } from '../..';
 import {
   UnauthorizedException,
   InternalServerErrorException,
   BadRequestException,
-  Injectable,
 } from '@nestjs/common';
 import * as speakeasy from "speakeasy";
 import { JwtService } from './jwt.service';
@@ -189,19 +190,20 @@ export abstract class AuthServiceAbstract {
 
 
   // ---------- Send Email helper ----------
-  protected async sendEmailConfirmation(id: Snowflake, email: string) {
+  protected async sendEmailConfirmation(id: Snowflake, user: UserDTO) {
     const TTL = 1000 * 60 * 60 * 24; // 1d
     const confirmToken = this.jwt.sign(
-      { sub: String(id), email: email, action: "confirm_email" },
+      { sub: String(id), email: user.email, action: EB.EMAIL_AUTH.CONFIRM_EMAIL },
       { expiresIn: TTL, secret: process.env.JWT_SECRET }
     );
 
-    await this.eventBus.publish("notification.send.email", {
-      type: "CONFIRM_EMAIL",
-      to: email,
+    await this.eventBus.publish(EB.CHANNEL.EMAIL, {
+      type: EB.EMAIL_AUTH.CONFIRM_EMAIL,
       data: {
         token: confirmToken,
         confirmUrl: `${process.env.FRONTEND_URL}/auth/confirm/${confirmToken}`,
+        email: user.email,
+        username: user.username
       },
     });
   }
@@ -211,12 +213,15 @@ export abstract class AuthServiceAbstract {
       // 1. Verify token
       const payload = this.jwt.verify(token, { secret: process.env.JWT_SECRET });
 
-      if (payload.action !== "confirm_email") throw new UnauthorizedException();
+      if (payload.action !== EB.EMAIL_AUTH.CONFIRM_EMAIL) throw new UnauthorizedException();
 
       // 2. Publish event
-      await this.eventBus.publish("user.email.confirmed", {
-        userId: payload.sub,
-        email: payload.email,
+      await this.eventBus.publish(EB.CHANNEL.EMAIL, {
+        type: EB.EMAIL_AUTH.CONFIRM_EMAIL,
+        data: {
+          userId: payload.sub,
+          email: payload.email
+        }
       });
 
       return { message: "Email confirmed." };
@@ -236,12 +241,12 @@ export abstract class AuthServiceAbstract {
     });
 
     // Send reset email
-    await this.eventBus.publish("notification.send.email", {
-      type: "RESET_PASSWORD",
-      to: email,
-      data: { code },
+    await this.eventBus.publish(EB.CHANNEL.EMAIL, {
+      type: EB.EMAIL_AUTH.RESET_PASSWORD,
+      data: { email, code },
     });
   }
+
   protected async checkOTP(code: string) {
     return speakeasy.totp.verify({
       secret: requireEnv("OTP_SECRET_CODE"),

@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { AbstractRedis, AbstractRedisAuth, AbstractRedisPubSub } from "../services";
+import { AbstractRedis, AbstractRedisAuth, RedisEventBus } from "../services";
 import { REDIS_AUTH_SERVICE, REDIS_PUBSUB_SERVICE, REDIS_SERVICE } from "../interfaces";
 import Redis from "ioredis";
 
 class RedisServiceImpl extends AbstractRedis {}
-class RedisPubSubImpl extends AbstractRedisPubSub {}
+class RedisPubSubImpl extends RedisEventBus {}
 class RedisAuthImpl extends AbstractRedisAuth {}
 
 @Module({

@@ -1,2 +1,2 @@
 export * from './redis/index';
-export * from './event-bus.constant';
+export * as EB from './event-bus';
