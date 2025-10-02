@@ -14,3 +14,4 @@ export const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
         <p>Voici le code {code} pour réinitialiser votre mot de passe</p>
     </div>
 );
+export default ResetPasswordEmail;
