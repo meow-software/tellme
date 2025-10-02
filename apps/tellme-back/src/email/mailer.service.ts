@@ -21,7 +21,7 @@ export class MailerService {
 
     protected resend : Resend = new Resend(process.env.RESEND_API_KEY);
 
-    protected from  = `"TellMe" <${process.env.RESEND_FROM}>`; // <no-reply@tellme.com>
+    protected from  = `"TellMe" <${process.env.RESEND_FROM}>`; // onboarding@resend.dev
 
     protected async byTransporter(emailTemplate: AbstractEmail, payload: EmailPayload) {
         const html = await render(emailTemplate.render(payload.variables));
@@ -40,12 +40,10 @@ export class MailerService {
 
     protected async byResend(emailTemplate: AbstractEmail, payload: EmailPayload) {
         const to = envIsProd(requireEnv("NODE_ENV")) ? payload.to : `delivered${payload.to.split('@')[0]}+@resend.dev`;
-        console.log("--envoyer", to,"--par", this.from)
         await this.resend.emails.send({
             from: this.from,
             to: to,
             subject: payload.subject || emailTemplate.subject,
-            // html: '<strong>It works!</strong>', 
             react: emailTemplate.render(payload.variables)
         });
     }

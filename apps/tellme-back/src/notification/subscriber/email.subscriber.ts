@@ -12,22 +12,18 @@ export class EmailSubscriber implements OnModuleInit {
   }
 
   onModuleInit() {
-    this.logger.log("email subscriber init");
     this.eventBus.subscribe(EB.CHANNEL.EMAIL, async (message) => {
       const { type, data } = message;
-      console.log("---appeller", type)
       if (type === EB.EMAIL_AUTH.CONFIRM_EMAIL) {
         await this.notificationService.sendConfirmEmail(data);
       }
     });
-    this.logger.log(" CONFIRM EMAIL Configurer.");
     this.eventBus.subscribe(EB.CHANNEL.EMAIL, async (message) => {
       const { type, data } = message;
       if (type === EB.EMAIL_AUTH.RESET_PASSWORD) {
         await this.notificationService.sendConfirmEmail(data);
       }
     }); 
-
     // faire email confirmed, password edited
   }
 }
