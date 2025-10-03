@@ -19,7 +19,8 @@ model User {
   id       BigInt   @id
   username String   @unique
   password String  
-  email    String?   @unique
+  email    String?  @unique
+  lang     String   @db.Char(2) @default("en")
   isConfirmed Boolean @default(false)
   bot Bot?
 }

@@ -74,7 +74,7 @@ export class UserRepository {
      * @param data - User data (id, username, email, hashedPassword)
      * @returns The newly created UserDTO
      */
-    async createUser(data: { id: string | bigint; username: string; email: string; hashedPassword: string; }): Promise<UserDTO> {
+    async createUser(data: { id: string | bigint; username: string; email: string; hashedPassword: string; lang: string; }): Promise<UserDTO> {
         const id: bigint = BigInt(data.id);
         const user = await this.db.user.create({ 
             data: {
@@ -83,6 +83,7 @@ export class UserRepository {
                 isConfirmed: false,
                 email: data.email, 
                 username: data.username,
+                lang: data.lang,
             },
         });
         return this.pTIUser(user) as UserDTO;

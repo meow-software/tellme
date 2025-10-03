@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthErrors, ClientCredentialsDto, JwtAuthGuard, LoginDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto, RefreshTokenGuard } from 'src/lib/common';
+import { AuthErrors, ClientCredentialsDto, JwtAuthGuard, LoginDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto, RefreshTokenGuard, type IAuthenticatedRequest } from 'src/lib/common';
 import type { Response } from 'express';
 
 @Controller('auth')
@@ -8,24 +8,23 @@ export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('register')
-    async register(@Body() dto: RegisterDto) {
-        return this.authService.registerUser(dto);
+    async register(@Body() dto: RegisterDto, @Req() req: IAuthenticatedRequest) {
+        return this.authService.registerUser(dto, req);
     }
 
     @Get('register/confirm')
-    async confirmRegister(@Query('token') token: string) {
+    async confirmRegister(@Query('token') token: string, @Req() req: IAuthenticatedRequest) {
         if (!token) throw new BadRequestException({
             code: AuthErrors.TOKEN_REQUIRED,
             message: 'Token required'
         });
-        return this.authService.confirmRegister(token);
+        return this.authService.confirmRegister(token, req);
     }
 
     @Post('register/confirm/resend')
-    async resendConfirmRegister(@Body() dto: ResendConfirmationDto,
-        @Req() req: Request
+    async resendConfirmRegister(@Body() dto: ResendConfirmationDto
     ) {
-        return this.authService.resendEmailConfirmRegister(dto.id, req.headers);
+        return this.authService.resendEmailConfirmRegister(dto.id);
     }
 
     private buildSession(res, pair, refreshCsrfToken, accessCsrfToken) {
@@ -59,7 +58,7 @@ export class AuthController {
         return this.authService.getBotToken(dto.id, dto.clientSecret);
     }
 
-    @UseGuards(RefreshTokenGuard)  
+    @UseGuards(RefreshTokenGuard)
     @Post('refresh')
     @HttpCode(200)
     async refresh(
@@ -75,8 +74,8 @@ export class AuthController {
     @Post('reset-password/demand')
     async resetPasswordDemand(
         @Body() dto: ResetPasswordDemandDto,
-        @Req() req: Request) {
-        return this.authService.resetPasswordDemand(dto.id, req.headers);
+        @Req() req: IAuthenticatedRequest) {
+        return this.authService.resetPasswordDemand(dto.id, req );
     }
 
 

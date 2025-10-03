@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken, validateCsrfToken, AuthErrors, AuthSuccess } from 'src/lib/common';
+import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken, validateCsrfToken, AuthErrors, AuthSuccess, IAuthenticatedRequest, IRequest } from 'src/lib/common';
 
 @Injectable()
 export class AuthService extends AuthServiceAbstract {
@@ -21,8 +21,8 @@ export class AuthService extends AuthServiceAbstract {
      * Register: delegates user creation to the USER_SERVICE,
      * then issues an access/refresh token pair.
      */
-    async registerUser(dto: RegisterDto) {
-        const user = await this.userService.registerUser(dto) as UserDTO;
+    async registerUser(dto: RegisterDto, req:IAuthenticatedRequest) {
+        const user = await this.userService.registerUser(dto, req) as UserDTO;
         if (!user) throw new BadRequestException({
             code: AuthErrors.INVALID_CREDENTIALS,
             message: 'User registration failed.'
@@ -32,12 +32,12 @@ export class AuthService extends AuthServiceAbstract {
         return { ...this.issuePair(payload), code: AuthErrors.CHECK_EMAIL_CONFIRMATION, message: "Check your email to confirm your account." };
     }
 
-    async confirmRegister(token: string) {
-        this.confirmEmailRegister(token);
+    async confirmRegister(token: string, req: IAuthenticatedRequest) {
+        this.confirmEmailRegister(token, req.userLang);
     }
 
-    async resendEmailConfirmRegister(id: Snowflake, header: any = {}) {
-        const user = await this.userService.getMe({ id }) as UserDTO;
+    async resendEmailConfirmRegister(id: Snowflake) {
+        const user = await this.userService.findById(id) as UserDTO;
 
         if (!user) throw new BadRequestException({
             code: AuthErrors.NO_USER_WITH_ID,
@@ -175,8 +175,8 @@ export class AuthService extends AuthServiceAbstract {
     /**
      * Reset password demand
      */
-    async resetPasswordDemand(userId: Snowflake, ctx: any) {
-        const user = await this.userService.getMe({ ...ctx, id: userId }) as UserDTO;
+    async resetPasswordDemand(userId: Snowflake,  req: IAuthenticatedRequest ) {
+        const user = await this.userService.getMe(req) as UserDTO;
         if (!user) throw new BadRequestException({
             code: AuthErrors.NO_USER_WITH_EMAIL,
             message: "No user found with this email."
@@ -186,7 +186,7 @@ export class AuthService extends AuthServiceAbstract {
             message: "User has no email, i can't help you."
         });
 
-        this.sendEmailResetPassword(user.id, user.email);
+        this.sendEmailResetPassword(user.id, user.email, req.userLang);
 
         return { success: true, code: AuthSuccess.PASSWORD_RESET_LINK_SENT, message: "Password reset link sent to your email!" };
     }

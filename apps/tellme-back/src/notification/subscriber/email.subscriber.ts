@@ -21,7 +21,7 @@ export class EmailSubscriber implements OnModuleInit {
     this.eventBus.subscribe(EB.CHANNEL.EMAIL, async (message) => {
       const { type, data } = message;
       if (type === EB.EMAIL_AUTH.RESET_PASSWORD) {
-        await this.notificationService.sendConfirmEmail(data);
+        await this.notificationService.sendResetPassword(data);
       }
     }); 
     // faire email confirmed, password edited

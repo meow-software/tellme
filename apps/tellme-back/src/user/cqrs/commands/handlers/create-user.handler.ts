@@ -23,6 +23,7 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
         username: command.username,
         email: command.email,
         hashedPassword: hashedPassword,
+        lang: command.lang,
       }
       );
     } catch (e) {
@@ -36,6 +37,7 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
         id: this.snowflake.toString(user.id),
         username: user.username,
         email: user.email,
+        lang: user.lang
       }
     });
 

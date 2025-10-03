@@ -15,6 +15,9 @@ export class UserDTO implements IUserDto{
 
   @Expose()
   email: string | null; 
+
+  @Expose()
+  lang: string;
   
   @Expose()
   isConfirmed: boolean;

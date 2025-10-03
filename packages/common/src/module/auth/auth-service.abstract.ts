@@ -203,12 +203,13 @@ export abstract class AuthServiceAbstract {
         token: confirmToken,
         confirmUrl: `${process.env.FRONTEND_URL}/auth/confirm/${confirmToken}`,
         email: user.email,
-        username: user.username
+        username: user.username,
+        lang: user.lang
       },
     });
   }
 
-  protected async confirmEmailRegister(token: string) {
+  protected async confirmEmailRegister(token: string, lang: string) {
     try {
       // 1. Verify token
       const payload = this.jwt.verify(token, { secret: process.env.JWT_SECRET });
@@ -220,7 +221,8 @@ export abstract class AuthServiceAbstract {
         type: EB.EMAIL_AUTH.CONFIRM_EMAIL,
         data: {
           userId: payload.sub,
-          email: payload.email
+          email: payload.email,
+          lang
         }
       });
 
@@ -230,7 +232,7 @@ export abstract class AuthServiceAbstract {
     }
   }
   // ----- OTP
-  protected async sendEmailResetPassword(id: Snowflake, email: string) {
+  protected async sendEmailResetPassword(id: Snowflake, email: string, lang: string) {
     const TTL = 60 * 15; // 15 min
     // Generate code
     const code = speakeasy.totp({
@@ -243,7 +245,7 @@ export abstract class AuthServiceAbstract {
     // Send reset email
     await this.eventBus.publish(EB.CHANNEL.EMAIL, {
       type: EB.EMAIL_AUTH.RESET_PASSWORD,
-      data: { email, code },
+      data: { email, code, lang},
     });
   }
 

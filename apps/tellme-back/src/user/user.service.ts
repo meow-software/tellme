@@ -1,6 +1,6 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { IUserService, UserDTO, RegisterDto, LoginDto, UpdateUserDto, Snowflake, UserErrors } from 'src/lib/common';
+import { IUserService, UserDTO, RegisterDto, LoginDto, UpdateUserDto, Snowflake, UserErrors, IAuthenticatedRequest } from 'src/lib/common';
 import { FindUserByIdQuery } from './cqrs/queries/find-user-by-id.query';
 import { CreateUserCommand } from './cqrs/commands/create-user.command';
 import { CheckLoginQuery } from './cqrs/queries/check-login.query';
@@ -34,11 +34,12 @@ export class UserService implements IUserService {
   /**
    * Registers a new user in the system.
    * @param dto - Registration data (username, email, password)
+   * @param ctx - Context of request
    * @returns The created UserDTO
    * @throws BadRequestException if registration fails
    */
-  async registerUser(dto: RegisterDto): Promise<UserDTO> {
-    const user = await this.commandBus.execute(new CreateUserCommand(dto.username, dto.email, dto.password));
+  async registerUser(dto: RegisterDto, req: IAuthenticatedRequest): Promise<UserDTO> {
+    const user = await this.commandBus.execute(new CreateUserCommand(dto.username, dto.email, dto.password, req.userLang));
 
     if (!user) {
       throw new BadRequestException({
@@ -61,12 +62,15 @@ export class UserService implements IUserService {
 
   /**
    * Retrieves the currently authenticated user.
-   * @param id - User ID
    * @param ctx - Request context (e.g. headers, JWT payload)
    * @returns UserDTO if found, null otherwise
    */
-  async getMe(id: Snowflake | bigint, ctx: object = {}): Promise<UserDTO | null> {
-    return this.findById(id);
+  async getMe(req: IAuthenticatedRequest): Promise<UserDTO | null> {
+    if (!req || !req.user || !req.user.sub) throw new UnauthorizedException({
+      code: UserErrors.NOT_CONNECTED,
+      message: 'User not connected!'
+    })
+    return this.findById(req.user?.sub);
   }
 
   /**
