@@ -8,10 +8,17 @@ export const LANGS = {
 } as const;
 
 /**
- * Array of all supported language codes
- * Extracted from LANGS constant for easy validation
+ * Type representing all supported language codes
+ * Useful for type-safe language parameters and validation
  */
-export const SUPPORTED_LANGUAGES: string[] = Object.values(LANGS);
+export type SUPPORTED_LANGUAGES = typeof LANGS[keyof typeof LANGS];
+
+/**
+ * Array of all supported language codes
+ * Extracted from LANGS constant for easy validation and iteration
+ */
+export const SUPPORTED_LANGUAGES: SUPPORTED_LANGUAGES[] = Object.values(LANGS);
+
 
 /**
  * Default fallback language used
@@ -29,7 +36,7 @@ export const DEFAULT_LANGUAGE = LANGS.en;
  */
 export function isSupportedLanguage(lang?: string): boolean {
     if (!lang) return false;
-    return SUPPORTED_LANGUAGES.includes(lang);
+    return SUPPORTED_LANGUAGES.includes(lang as SUPPORTED_LANGUAGES);
 }
 
 /**

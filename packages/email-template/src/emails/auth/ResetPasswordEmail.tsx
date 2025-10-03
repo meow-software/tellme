@@ -1,69 +1,78 @@
 import * as React from 'react';
-import { APP_NAME, CSS_MAIN_CONTAINER } from '@/constant';
-import { Tailwind } from '@react-email/components';
-import { Footer } from '@/components/layouts/footer';
+import { APP_NAME } from '@/constant';
 import { Button } from '@/components/ui/button';
 import EmailWrapper from '@/components/layouts/email-wrapper';
+import {
+  I18n,
+  SUPPORTED_LANGUAGES,
+} from '@/lib/core';
+import translations from '@/i18n/auth/ResetPasswordEmail.json';
 
 export interface ResetPasswordEmailProps {
-    email: string;
-    code: string;
-    resetUrl: string;
-    lang?: string;
+  email: string;
+  code: string;
+  resetUrl: string;
+  lang: SUPPORTED_LANGUAGES;
 }
 
 export const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
-    email,
-    code,
-    resetUrl,
-    lang = 'en',
+  email,
+  code,
+  resetUrl,
+  lang,
 }) => {
-    const link = `${resetUrl}?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`;
+  const i18n = new I18n(translations, lang);
+  const link = `${resetUrl}?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`;
+  const greetingParts = i18n.t('GREETING').split('{email}');
 
-    return (
-        <EmailWrapper>
-            <div className='p-6'>
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">
-                        {APP_NAME.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                        <h1 className="m-0 text-lg leading-7 text-gray-900">Forgot your password?</h1>
-                        <p className="m-0 text-xs text-gray-500">
-                            That's okay — it happens! Even I forget sometimes, just yesterday I forgot my password... wait, what was it again? Never mind. Click the button below to reset your password.
-                        </p>
-                    </div>
-                </div>
+  return (
+    <EmailWrapper>
+      <div className="p-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">
+            {APP_NAME.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h1 className="m-0 text-lg leading-7 text-gray-900">
+              {i18n.t('TITLE')}
+            </h1>
+            <p className="m-0 text-xs text-gray-500">
+              {i18n.t('SUBTITLE')}
+            </p>
+          </div>
+        </div>
 
+        {/* Friendly intro */}
+        <div className="mt-5">
+          <p className="m-0 text-gray-700">
+            {greetingParts[0]}
+            <strong>{email}</strong>
+            {greetingParts[1]}
+          </p>
+        </div>
 
-                {/* Friendly intro */}
-                <div className="mt-5">
-                    <p className="m-0 text-gray-700">
-                        Hi there — we received a request to reset the password for <strong>{email}</strong>. No worries: use the button below or copy the code provided.
-                    </p>
-                </div>
+        {/* Code box */}
+        <div className="mt-5 text-center">
+          <div className="inline-block px-6 py-3 rounded-lg bg-gray-50 border-2 border-dashed border-gray-200">
+            <p className="m-0 text-xl tracking-widest font-bold text-gray-900">
+              {code}
+            </p>
+          </div>
+        </div>
 
+        <div className="mt-6 text-center">
+          <Button href={link} children={i18n.t('RESET_BUTTON')} />
+        </div>
 
-                {/* Code box */}
-                <div className="mt-5 text-center">
-                    <div className="inline-block px-6 py-3 rounded-lg bg-gray-50 border-2 border-dashed border-gray-200">
-                        <p className="m-0 text-xl tracking-widest font-bold text-gray-900">{code}</p>
-                    </div>
-                </div>
-
-                <div className="mt-6 text-center">
-                    <Button href={link} children="Reset Password" />
-                </div>
-
-                {/* Small note */}
-                <div className="mt-4">
-                    <p className="m-0 text-gray-500 text-xs">
-                        If you did not request this password reset, you can safely ignore this email — your password will remain unchanged.
-                    </p>
-                </div>
-            </div>
-        </EmailWrapper>
-    );
+        {/* Small note */}
+        <div className="mt-4">
+          <p className="m-0 text-gray-500 text-xs">
+            {i18n.t('IGNORE_EMAIL')}
+          </p>
+        </div>
+      </div>
+    </EmailWrapper>
+  );
 };
 
 export default ResetPasswordEmail;

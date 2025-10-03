@@ -1,0 +1,16 @@
+{
+  "en": {
+    "TITLE": "Welcome to Tell Me!",
+    "GREETING": "Hey {username}",
+    "THANKS": "Thanks for registering an account with Tell Me!",
+    "VERIFY": "Before we get started, we'll need to verify your email.",
+    "VERIFY_BUTTON": "Verify Email"
+  },
+  "fr": {
+    "TITLE": "Bienvenue sur Tell Me !",
+    "GREETING": "Salut {username}",
+    "THANKS": "Merci de vous être inscrit sur Tell Me !",
+    "VERIFY": "Avant de commencer, nous devons vérifier votre e-mail.",
+    "VERIFY_BUTTON": "Vérifier l'e-mail"
+  }
+}

@@ -1,3 +1,4 @@
+import { CURRENT_LANG } from "@/lib/core";
 import { ResetPasswordEmail, WelcomeEmail, PasswordChangedEmail } from "./../src";
 
 export const EMAIL_COMPONENTS: {
@@ -13,7 +14,8 @@ export const EMAIL_COMPONENTS: {
       props: {
         username: "Alice",
         email: "alice@example.com",
-        confirmUrl: "https://example.com/confirm"
+        confirmUrl: "https://example.com/confirm",
+        lang: CURRENT_LANG
       }
     },
     {
@@ -23,7 +25,8 @@ export const EMAIL_COMPONENTS: {
       props: {
         resetUrl: "https://example.com/reset",
         email: "Bob@example.com",
-        code: "123456"
+        code: "123456",
+        lang: CURRENT_LANG
       }
     },
     {
@@ -32,7 +35,8 @@ export const EMAIL_COMPONENTS: {
       component: PasswordChangedEmail,
       props: {
         email: "Charlie@example.com",
-        loginUrl: "https://example.com/login"
+        loginUrl: "https://example.com/login",
+        lang: CURRENT_LANG
       }
     }
   ];
