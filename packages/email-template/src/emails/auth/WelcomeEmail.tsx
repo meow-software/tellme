@@ -1,11 +1,11 @@
-import EmailWrapper from '@/components/layouts/email-wrapper';
-import { Button } from '@/components/ui/button';
+import EmailWrapper from './../../components/layouts/email-wrapper';
+import { Button } from './../../components/ui/button';
 import {
   I18n,
   ReactI18n,
   SUPPORTED_LANGUAGES,
-} from '@/lib/core';
-import translations from '@/i18n/auth/WelcomeEmail.json';
+} from './../../lib/core';
+import translations from './../../i18n/auth/WelcomeEmail.json';
 
 export interface WelcomeEmailProps {
   email: string;

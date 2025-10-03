@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "dist",  // Specifies the output directory for compiled files.
-    "module": "CommonJS",  // Sets the module system to CommonJS (for Node.js compatibility).
+    "module": "ESNext",  // Sets the module system to ESNext (for js compatibility).
     "target": "ESNext",  // Specifies the target JavaScript version. ESNext is the latest version.
     "declaration": true,  // Generates corresponding `.d.ts` declaration files for TypeScript types.
     "declarationMap": true,  // Generates source maps for declaration files, useful for debugging.

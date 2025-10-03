@@ -1,4 +1,4 @@
-import { CURRENT_LANG } from "@/lib/core";
+import { CURRENT_LANG } from "./../src/lib/core";
 import { ResetPasswordEmail, WelcomeEmail, PasswordChangedEmail } from "./../src";
 
 export const EMAIL_COMPONENTS: {
