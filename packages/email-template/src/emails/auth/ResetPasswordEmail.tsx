@@ -23,7 +23,6 @@ export const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
 }) => {
   const i18n = new I18n(translations, lang);
   const link = `${resetUrl}?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`;
-  const greetingParts = i18n.t('GREETING').split('{email}');
 
   return (
     <EmailWrapper>
@@ -45,9 +44,13 @@ export const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({
         {/* Friendly intro */}
         <div className="mt-5">
           <p className="m-0 text-gray-700">
-            {greetingParts[0]}
-            <strong>{email}</strong>
-            {greetingParts[1]}
+            {i18n.t('GREETING', {
+              email: {
+                value: email, render: (v) => {
+                  return <strong>{v}</strong>
+                }
+              },
+            })}
           </p>
         </div>
 

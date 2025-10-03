@@ -10,7 +10,7 @@ import translations from '@/i18n/auth/PasswordChangedEmail.json';
 
 export interface PasswordChangedEmailProps {
   email: string;
-  loginUrl: string; 
+  loginUrl: string;
   lang: SUPPORTED_LANGUAGES;
 }
 
@@ -20,8 +20,6 @@ export const PasswordChangedEmail: React.FC<PasswordChangedEmailProps> = ({
   lang,
 }) => {
   const i18n = new I18n(translations, lang);
-  const greetingParts = i18n.t('GREETING').split('{email}');
-  const secureAccountParts = i18n.t('SECURE_ACCOUNT').split('did not');
 
   return (
     <EmailWrapper>
@@ -44,17 +42,19 @@ export const PasswordChangedEmail: React.FC<PasswordChangedEmailProps> = ({
         {/* Friendly intro */}
         <div className="mt-5">
           <p className="m-0 text-gray-700">
-            {greetingParts[0]}
-            <strong>{email}</strong>
-            {greetingParts[1]}
+            {i18n.t('GREETING', {
+              email: {
+                value: email, render: (v) => {
+                  return <strong>{v}</strong>
+                }
+              },
+            })}
           </p>
           <p className="mt-3 text-gray-700">
             {i18n.t('NO_ACTION_NEEDED')}
           </p>
           <p className="mt-2 text-gray-700">
-            {secureAccountParts[0]}
-            <strong>did not</strong>
-            {secureAccountParts[1]}
+            {i18n.t('SECURE_ACCOUNT')}
           </p>
         </div>
 

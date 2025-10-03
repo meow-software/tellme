@@ -21,7 +21,6 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
   lang,
 }) => {
   const i18n = new ReactI18n(translations, lang);
-  // const greetingParts = i18n.t('GREETING').split('{username}');
 
   return (
     <EmailWrapper>
@@ -31,11 +30,6 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
 
       <div className="bg-white p-6 rounded-b-lg shadow-md">
         <p className="mb-4">
-          {/* <strong>
-            {greetingParts[0]}
-            {username}
-            {greetingParts[1]}
-          </strong> */}
           {i18n.t('GREETING', {
             username: {
               value: username, render: (v) => {
