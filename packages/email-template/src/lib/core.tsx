@@ -1,9 +1,6 @@
 export * from '@tellme/core';
-
 import  {AbstractI18n} from '@tellme/core';
-
 import React from "react";
-
 export const CURRENT_LANG = 'fr'
 
 /**

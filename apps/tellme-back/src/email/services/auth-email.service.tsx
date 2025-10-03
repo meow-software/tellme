@@ -10,14 +10,14 @@ export class AuthEmailService {
   welcomeUser(data: WelcomeEmailProps) {
     return new Email(
       `Bienvenue sur TellMe, ${data.username}!`,
-      <WelcomeEmail username={data.username} email={data.email} confirmUrl={data.confirmUrl} />,
+      <WelcomeEmail username={data.username} email={data.email} confirmUrl={data.confirmUrl} lang={data.lang} />,
     );
   }
 
   resetPassword(data: ResetPasswordEmailProps) {
     return new Email(
       'Réinitialisation du mot de passe',
-      <ResetPasswordEmail email={data.email} code={data.code} />,
+      <ResetPasswordEmail email={data.email} code={data.code} resetUrl={data.resetUrl} lang={data.lang} />,
     );
   }
 }

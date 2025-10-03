@@ -1,1 +1,1 @@
-export * from '@tellme/email-template';
+export * from '@tellme/email-template'; 
