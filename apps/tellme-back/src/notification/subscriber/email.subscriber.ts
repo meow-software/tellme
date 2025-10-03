@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, Inject, Logger } from '@nestjs/common';
 import { NotificationService } from '../notification.service';
-import { EB, EVENT_BUS, type IEventBus } from '@tellme/common';
+import { EB, EVENT_BUS, type IEventBus } from 'src/lib/common';
 
 @Injectable()
 export class EmailSubscriber implements OnModuleInit {

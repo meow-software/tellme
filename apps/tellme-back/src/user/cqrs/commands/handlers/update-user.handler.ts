@@ -1,8 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UpdateUserCommand } from '../update-user.command';
 import { BadRequestException, Inject } from '@nestjs/common';
-import { UserRepository } from '@tellme/database';
-import { buildRedisCacheKeyUser, EVENT_BUS, type IRedisService, REDIS_SERVICE, type IEventBus, EB } from '@tellme/common';
+import { UserRepository } from 'src/lib/database';
+import { buildRedisCacheKeyUser, EVENT_BUS, type IRedisService, REDIS_SERVICE, type IEventBus, EB, UserErrors } from 'src/lib/common';
 
 @CommandHandler(UpdateUserCommand)
 export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
@@ -17,7 +17,7 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
     let { dto } = command;
 
     if (Object.keys(dto).length === 0) {
-      throw new BadRequestException('No fields to update.');
+      throw new BadRequestException({ code: UserErrors.NO_FIELDS_TO_UPDATE, message: 'No fields to update.' });
     }
     delete dto['password'];
 

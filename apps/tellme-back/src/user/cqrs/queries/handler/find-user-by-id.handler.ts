@@ -1,7 +1,7 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { FindUserByIdQuery } from '../find-user-by-id.query';
-import {SnowflakeService, buildRedisCacheKeyUser, REDIS_CACHE_USER_TTL, REDIS_SERVICE, type IRedisService} from '@tellme/common';
-import { UserRepository } from '@tellme/database'
+import {SnowflakeService, buildRedisCacheKeyUser, REDIS_CACHE_USER_TTL, REDIS_SERVICE, type IRedisService} from 'src/lib/common';
+import { UserRepository } from 'src/lib/database'
 import { Inject } from '@nestjs/common';
 
 @QueryHandler(FindUserByIdQuery)

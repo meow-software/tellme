@@ -3,7 +3,7 @@ import { render } from '@react-email/render';
 import { AbstractEmail, EmailPayload } from './email.abstract';
 import { createTransport } from 'nodemailer';
 import { Resend } from 'resend';
-import { envIsProd, requireEnv } from '@tellme/common';
+import { envIsProd, requireEnv } from 'src/lib/common';
 
 @Injectable()
 export class MailerService {

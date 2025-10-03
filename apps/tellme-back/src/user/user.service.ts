@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { IUserService, UserDTO, RegisterDto, LoginDto, UpdateUserDto, Snowflake } from '@tellme/common';
+import { IUserService, UserDTO, RegisterDto, LoginDto, UpdateUserDto, Snowflake, UserErrors } from 'src/lib/common';
 import { FindUserByIdQuery } from './cqrs/queries/find-user-by-id.query';
 import { CreateUserCommand } from './cqrs/commands/create-user.command';
 import { CheckLoginQuery } from './cqrs/queries/check-login.query';
@@ -41,7 +41,10 @@ export class UserService implements IUserService {
     const user = await this.commandBus.execute(new CreateUserCommand(dto.username, dto.email, dto.password));
 
     if (!user) {
-      throw new BadRequestException('User registration failed.');
+      throw new BadRequestException({
+        code: UserErrors.REGISTRATION_FAILED,
+        message: 'User registration failed.'
+      });
     }
 
     return user;
@@ -98,7 +101,10 @@ export class UserService implements IUserService {
    */
   async patchMe(dto: UpdateUserDto, ctx: any): Promise<UserDTO> {
     if (!ctx || !ctx.user || !ctx.user.id) {
-      throw new BadRequestException('User not connected!');
+      throw new BadRequestException({
+        code: UserErrors.NOT_CONNECTED,
+        message: 'User not connected!'
+      });
     }
     return await this.commandBus.execute(new UpdateUserCommand(ctx.user.id, dto));
   }

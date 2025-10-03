@@ -35,11 +35,11 @@ export class LanguageMiddleware implements NestMiddleware {
         if (!lang) {
             const acceptLang = req.headers['accept-language'];
             lang = langFromAcceptLanguage(acceptLang);
-            console.log("Language provided by Accept-Language header:", lang);
+            // console.log("Language provided by Accept-Language header:", lang);
         }
 
         // Validate and set the final language
-        console.log("Final determined language:", lang);
+        // console.log("Final determined language:", lang);
 
         // Update cookie if language has changed or doesn't exist
         if (req.cookies['lang'] !== lang) {

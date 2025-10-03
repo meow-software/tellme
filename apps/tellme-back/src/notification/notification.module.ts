@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { NotificationService } from './notification.service';
-import { EventBusModule } from '@tellme/common';
+import { EventBusModule } from 'src/lib/common';
 import { EmailModule } from 'src/email/email.module';
 import { EmailSubscriber } from './subscriber/email.subscriber';
 

@@ -1,4 +1,4 @@
-import { Snowflake } from "@tellme/common";
+import { Snowflake } from "src/lib/common";
 
 export class DeleteUserCommand {
   constructor(public readonly id: Snowflake | bigint) {}

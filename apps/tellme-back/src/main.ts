@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
-import { HttpExceptionFilter, ResponseInterceptor } from '@tellme/common';
+import { HttpExceptionFilter, ResponseInterceptor } from 'src/lib/common';
 import cookieParser from 'cookie-parser'; 
 
 async function bootstrap() {

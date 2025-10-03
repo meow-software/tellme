@@ -1,7 +1,7 @@
 
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { SearchUsersQuery } from '../search-users.query';
-import { UserRepository } from '@tellme/database';
+import { UserRepository } from 'src/lib/database';
 
 @QueryHandler(SearchUsersQuery)
 export class SearchUsersHandler implements IQueryHandler<SearchUsersQuery> {

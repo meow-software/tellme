@@ -1,8 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CreateUserCommand } from '../create-user.command';
 import { ConflictException, Inject } from '@nestjs/common';
-import { UserRepository } from '@tellme/database';
-import { EB, EVENT_BUS, hash, type IEventBus, SnowflakeService } from '@tellme/common';
+import { UserRepository } from 'src/lib/database';
+import { EB, EVENT_BUS, hash, type IEventBus, SnowflakeService, UserErrors } from 'src/lib/common';
 
 @CommandHandler(CreateUserCommand)
 export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
@@ -27,7 +27,7 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
       );
     } catch (e) {
       if (e.code === 'P2002') {
-        throw new ConflictException('Username or email already exists.');
+        throw new ConflictException({ code: UserErrors.USERNAME_OR_EMAIL_EXISTS, message: 'Username or email already exists.' });
       }
     }
     await this.eventBus.publish(EB.CHANNEL.USER, {

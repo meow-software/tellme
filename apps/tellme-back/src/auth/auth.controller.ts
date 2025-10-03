@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ClientCredentialsDto, JwtAuthGuard, LoginDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto, RefreshTokenGuard } from '@tellme/common';
+import { AuthErrors, ClientCredentialsDto, JwtAuthGuard, LoginDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto, RefreshTokenGuard } from 'src/lib/common';
 import type { Response } from 'express';
 
 @Controller('auth')
@@ -14,7 +14,10 @@ export class AuthController {
 
     @Get('register/confirm')
     async confirmRegister(@Query('token') token: string) {
-        if (!token) throw new BadRequestException('Token required');
+        if (!token) throw new BadRequestException({
+            code: AuthErrors.TOKEN_REQUIRED,
+            message: 'Token required'
+        });
         return this.authService.confirmRegister(token);
     }
 
@@ -97,7 +100,10 @@ export class AuthController {
             refreshToken = cookies['refresh_token'];
 
             if (!refreshToken) {
-                throw new BadRequestException('No refresh token found');
+                throw new BadRequestException({
+                    code: AuthErrors.NO_REFRESH_TOKEN,
+                    message: 'No refresh token found'
+                });
             }
         } catch (e) {
             console.log('cookie: ', (req as any).cookies) // TODO : verifier 

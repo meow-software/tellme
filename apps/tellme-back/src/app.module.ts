@@ -3,12 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { AuthCommonModule } from '@tellme/common';
+import { AuthCommonModule } from 'src/lib/common';
 import { UserModule } from './user/user.module';
-import { DatabaseService } from '@tellme/database';
+import { DatabaseService } from 'src/lib/database';
 import { NotificationModule } from './notification/notification.module';
 import { EmailModule } from './email/email.module';
-import { LanguageMiddleware } from '@tellme/common';
+import { LanguageMiddleware } from 'src/lib/common';
 
 @Module({
   imports: [

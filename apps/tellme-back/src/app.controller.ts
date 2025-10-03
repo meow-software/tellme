@@ -1,7 +1,6 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
-import {type Request } from 'express';
-import { type IAuthenticatedRequest } from '@tellme/common';
+import { type IAuthenticatedRequest } from 'src/lib/common';
 
 @Controller()
 export class AppController {

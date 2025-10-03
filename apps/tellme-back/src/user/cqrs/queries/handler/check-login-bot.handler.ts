@@ -1,7 +1,8 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { CheckLoginBotQuery } from '../check-login-bot.query';
 import { UnauthorizedException } from '@nestjs/common';
-import { UserRepository } from '@tellme/database';
+import { AuthErrors } from 'src/lib/common';
+import { UserRepository } from 'src/lib/database';
 
 @QueryHandler(CheckLoginBotQuery)
 export class CheckLoginBotHandler implements IQueryHandler<CheckLoginBotQuery> {
@@ -19,7 +20,7 @@ export class CheckLoginBotHandler implements IQueryHandler<CheckLoginBotQuery> {
             },
             include: { bot: true },
         });
-        if (!user) throw new UnauthorizedException('Invalid bot credentials.');
+        if (!user) throw new UnauthorizedException({ code: AuthErrors.INVALID_BOT_CREDENTIALS, message: 'Invalid bot credentials.' });
         return user;
     }
 }
