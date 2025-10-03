@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -8,23 +8,30 @@ import { UserModule } from './user/user.module';
 import { DatabaseService } from '@tellme/database';
 import { NotificationModule } from './notification/notification.module';
 import { EmailModule } from './email/email.module';
+import { LanguageMiddleware } from '@tellme/common';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    AuthModule,  
-    AuthCommonModule, 
+    AuthModule,
+    AuthCommonModule,
     UserModule, NotificationModule, EmailModule
   ],
   controllers: [AppController],
   providers: [
-    AppService, 
+    AppService,
     DatabaseService,
   ],
   exports: [
     DatabaseService
   ]
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LanguageMiddleware)
+      .forRoutes('*');
+  }
+}

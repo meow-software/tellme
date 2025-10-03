@@ -131,8 +131,9 @@ export type UserPayload = {
     /** User's email address (optional) */
     email?: string | null;
     /** User roles - can be array of strings or space-separated string (optional) */
-    roles?: string[] | string;
-    client: UserClientType
+    roles?: string[] | string; // Todo remove
+    client: UserClientType;
+    lang?: string; // Todo add in bdd schema and required
 };
 
 export type BaseUserPayload = {
