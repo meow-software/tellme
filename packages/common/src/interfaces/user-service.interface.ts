@@ -1,4 +1,4 @@
-import { Snowflake } from '@tellme/core';
+import { Snowflake } from './../lib/core';
 import { LoginDto, RegisterDto, UpdateUserDto, UserDTO } from '../dto';
 
 export const USER_SERVICE = Symbol('USER_SERVICE');

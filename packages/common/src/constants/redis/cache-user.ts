@@ -1,4 +1,4 @@
-import { Snowflake } from "@tellme/core";
+import { Snowflake } from "./../../";
 
 export const REDIS_CACHE_USER = `USER:`;
 export const REDIS_CACHE_USER_TTL = 60*5;

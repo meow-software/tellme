@@ -1,4 +1,4 @@
-export * from "@tellme/core";
+export * from './lib/core';
 export * from './services/index';
 export * from './utils/index';
 export * from './interceptors/index';

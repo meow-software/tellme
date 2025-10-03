@@ -1,4 +1,4 @@
-import { IUserDto, IBotDto, Snowflake } from "@tellme/core";
+import { IUserDto, IBotDto, Snowflake } from "./../../../lib/core";
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { BotDTO } from "./bot.dto";
 

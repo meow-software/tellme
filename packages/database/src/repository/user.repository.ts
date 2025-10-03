@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService, Prisma } from '../services/database.service';
 import { plainToInstance } from 'class-transformer';
-import { UserDTO, BotDTO, Snowflake } from '@tellme/common';
+import { UserDTO, BotDTO, Snowflake } from './../lib/common';
 
 @Injectable()
 export class UserRepository {
