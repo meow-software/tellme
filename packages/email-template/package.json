@@ -7,9 +7,6 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "npm run watch --workspace=@tellme/email-template",
-    "preview": "vite preview",
-    "vite": "vite dev",
-    "email": "email dev -d src/emails",
     "clean": "rimraf dist",
     "build": "rimraf dist && tsup",
     "watch": "tsup --watch",
@@ -20,22 +17,14 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@types/jest": "^30.0.0",
     "jest": "^30.1.3",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.4.1",
-    "tsconfig-paths": "^4.2.0",
-    "tsup": "^8.5.0",
-    "vite": "^7.1.8",
-    "vite-tsconfig-paths": "^5.1.4"
+    "tsup": "^8.5.0"
   },
   "dependencies": {
     "@react-email/components": "0.5.5",
-    "@react-email/render": "1.3.1",
-    "@react-email/tailwind": "1.2.2",
     "@tellme/core": "*",
-    "@vitejs/plugin-react": "^5.0.4",
-    "@vitejs/plugin-react-swc": "^4.1.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   }

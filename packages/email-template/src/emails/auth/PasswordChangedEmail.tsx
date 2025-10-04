@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { APP_NAME } from './../../constant';
-import EmailWrapper from './../../components/layouts/email-wrapper';
-import { Button } from './../../components/ui/button';
+import { APP_NAME } from '../../constant';
+import EmailWrapper from '../../components/layouts/email-wrapper';
+import { Button } from '../../components/ui/button';
 import {
   I18n,
   SUPPORTED_LANGUAGES,
-} from './../../lib/core';
-import translations from './../../i18n/auth/PasswordChangedEmail.json';
+} from '../../lib/core';
+import translations from '../../i18n/auth/PasswordChangedEmail.json';
 
 export interface PasswordChangedEmailProps {
   email: string;

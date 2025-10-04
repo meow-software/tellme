@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Tailwind } from '@react-email/components';
-import { Footer } from './../../components/layouts/footer';
+import { Footer } from './footer';
 
 interface EmailWrapperProps {
     header?: React.ReactNode;

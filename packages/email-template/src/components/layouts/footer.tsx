@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { APP_NAME } from './../../constant';
+import { APP_NAME } from '../../constant';
 
 export const Footer: React.FC = () => {
     return (

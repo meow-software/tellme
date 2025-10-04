@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { APP_NAME } from './../../constant';
-import { Button } from './../../components/ui/button';
-import EmailWrapper from './../../components/layouts/email-wrapper';
+import { APP_NAME } from '../../constant';
+import { Button } from '../../components/ui/button';
+import EmailWrapper from '../../components/layouts/email-wrapper';
 import {
   I18n,
   SUPPORTED_LANGUAGES,
-} from './../../lib/core';
-import translations from './../../i18n/auth/ResetPasswordEmail.json';
+} from '../../lib/core';
+import translations from '../../i18n/auth/ResetPasswordEmail.json';
 
 export interface ResetPasswordEmailProps {
   email: string;

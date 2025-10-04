@@ -1,8 +1,8 @@
+"use client";
+import { EMAIL_COMPONENTS } from "@/lib";
 import React, { useState } from "react";
-import ReactDOM from "react-dom/client";
-import { EMAIL_COMPONENTS } from "./register";
 
-function App() {
+export default function Home() {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
 
   // PAGE LISTE
@@ -55,5 +55,3 @@ function App() {
     </div>
   );
 }
-
-ReactDOM.createRoot(document.getElementById("root")!).render(<App />);

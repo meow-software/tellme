@@ -1,5 +1,5 @@
-import { CURRENT_LANG } from "./../src/lib/core";
-import { ResetPasswordEmail, WelcomeEmail, PasswordChangedEmail } from "./../src";
+import { CURRENT_LANG } from "../src/lib/core";
+import { ResetPasswordEmail, WelcomeEmail, PasswordChangedEmail } from "../src";
 
 export const EMAIL_COMPONENTS: {
   id: string;
