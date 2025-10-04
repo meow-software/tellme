@@ -9,7 +9,7 @@ export class AuthController {
 
     @Post('register')
     async register(@Body() dto: RegisterDto, @Req() req: IAuthenticatedRequest) {
-        return this.authService.registerUser(dto, req);
+        return this.authService.registerUser(dto, req); 
     }
 
     @Get('register/confirm')

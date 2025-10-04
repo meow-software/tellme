@@ -23,7 +23,7 @@ export class AppController {
   @Get("/lang")
   getLang(@Req() req: IAuthenticatedRequest) {
     return {
-      message: `Langue détectée: ${req.userLang}`,
+      message: `Langue détectée: ${req.userlang}`, 
     };
   }
 }

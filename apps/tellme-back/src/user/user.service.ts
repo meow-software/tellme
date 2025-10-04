@@ -39,7 +39,7 @@ export class UserService implements IUserService {
    * @throws BadRequestException if registration fails
    */
   async registerUser(dto: RegisterDto, req: IAuthenticatedRequest): Promise<UserDTO> {
-    const user = await this.commandBus.execute(new CreateUserCommand(dto.username, dto.email, dto.password, req.userLang));
+    const user = await this.commandBus.execute(new CreateUserCommand(dto.username, dto.email, dto.password, req.userlang));
 
     if (!user) {
       throw new BadRequestException({

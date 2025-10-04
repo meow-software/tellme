@@ -10,7 +10,7 @@ import { Response, NextFunction } from 'express';
  * 2. User's language setting in database (for authenticated users)
  * 3. Accept-Language header from browser
  * 4. Default to English if no language detected
- * 
+ *  
  * Sets the language in request context and updates cookie if needed
  */
 @Injectable()
@@ -47,7 +47,7 @@ export class LanguageMiddleware implements NestMiddleware {
             lang = getSupportedLanguage(lang);
 
             // Store language in request for application use
-            req['userLang'] = lang;
+            req['userlang'] = lang;
 
             // Update language cookie with expiration
             res.cookie('lang', lang, {

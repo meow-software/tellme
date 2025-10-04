@@ -28,12 +28,11 @@ export class AuthService extends AuthServiceAbstract {
             message: 'User registration failed.'
         })
         if (user.email) this.sendEmailConfirmation(user.id, user);
-        const payload: UserPayload = { sub: user.id.toString(), email: user.email, client: 'user' };
-        return { ...this.issuePair(payload), code: AuthErrors.CHECK_EMAIL_CONFIRMATION, message: "Check your email to confirm your account." };
+        return {code: AuthErrors.CHECK_EMAIL_CONFIRMATION, message: "Check your email to confirm your account." };
     }
 
     async confirmRegister(token: string, req: IAuthenticatedRequest) {
-        this.confirmEmailRegister(token, req.userLang);
+        this.confirmEmailRegister(token, req.userlang);
     }
 
     async resendEmailConfirmRegister(id: Snowflake) {
@@ -186,7 +185,7 @@ export class AuthService extends AuthServiceAbstract {
             message: "User has no email, i can't help you."
         });
 
-        this.sendEmailResetPassword(user.id, user.email, req.userLang);
+        this.sendEmailResetPassword(user.id, user.email, req.userlang);
 
         return { success: true, code: AuthSuccess.PASSWORD_RESET_LINK_SENT, message: "Password reset link sent to your email!" };
     }
