@@ -1,15 +1,18 @@
-import { redirect } from "next/navigation"
-
-const login = "auth/login"
-
-// export default function Home() {
-//   redirect(login)
-// }
-
-import {useTranslations} from 'next-intl';
+'use client';
+import { useTranslationStore } from "@/stores/useTranslationStore";
+import { useEffect } from "react";
 
 export default function Home() {
-  const t = useTranslations('HomePage');
+  const { t, requireNamespaces, getAllMessages } = useTranslationStore();
 
-  return <h1>{t('title')}</h1>;
+  useEffect(() => {
+    (async () => {
+      await requireNamespaces(['auth', 'home']);
+      console.log(await getAllMessages())
+    })();
+  }, []);
+
+  return <>
+    <h1>{t('home.title')}</h1>;
+  </>
 }

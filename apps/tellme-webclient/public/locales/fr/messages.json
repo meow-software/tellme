@@ -1,0 +1,6 @@
+{
+  "ERROR_GENERIC": "Une erreur est survenue. Veuillez réessayer plus tard.",
+  "ERROR_INCORRECT_CREDENTIALS": "Identifiants incorrects.",
+  "SUCCESS_LOGIN": "Connexion réussie, bienvenue {username}",
+  "SUCCESS_FORGOT_PASSWORD": "Vous avez reçu un email pour changer votre mot de passe"
+}

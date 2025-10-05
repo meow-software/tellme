@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { FormField } from "@/components/ui/formField"
 import SocialLoginButtons from "@/components/auth/SocialLoginButton"
@@ -10,6 +10,7 @@ import { useNotification } from "@/hooks/useNotification"
 import { register } from "@/lib/rest"
 import type { ApiResponse } from "@/lib"
 import { LoadingButton } from "@/components/ui/loadingButton"
+import { useTranslationStore } from "@/stores/useTranslationStore"
 
 export default function SignupPage() {
   const login = "login"
@@ -27,7 +28,14 @@ export default function SignupPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false)
+  const { t, requireNamespaces } = useTranslationStore()
 
+  useEffect(() => {
+    (async () => {
+      requireNamespaces(["auth", "common"]);
+    })();
+  }, []);
+  
   const handleSocialRegister = (provider: string) => {
     console.log(`Register with ${provider}`)
   }
@@ -36,12 +44,11 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // if (!email || !password || !confirmPassword || !pseudo || errors.email || errors.password || errors.confirmPassword || errors.pseudo) return;
     if (isFormInvalid) return;
 
     setIsLoading(true);
-    setFormError(null); // Clear erros
-    setFormSuccess(null); // Clear erros
+    setFormError(null);
+    setFormSuccess(null);
 
     let res: ApiResponse;
     try {
@@ -49,9 +56,8 @@ export default function SignupPage() {
 
       setFormSuccess(res.data.message);
     } catch (err: any) {
-      // networking error or 500
       res = err.response?.data;
-      if (res && res.errors) setFormError(res.errors.message || "An error has occurred. Please try again later.");
+      if (res && res.errors) setFormError(res.errors.message || t("messages.ERROR_GENERIC"));
     } finally {
       setIsLoading(false);
     }
@@ -59,26 +65,22 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Signup Form */}
       <div className="flex-1 flex flex-col justify-center px-8 py-12 bg-white">
         <div className="mx-auto w-full max-w-sm">
 
-          {/* Title */}
           <div className="mb-4">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-            <p className="text-gray-600">Join us to improve your sleep and bring peace to your life</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("auth.REGISTER_TITLE")}</h1>
+            <p className="text-gray-600">{t("auth.REGISTER_DESCRIPTION")}</p>
           </div>
 
-          {/* Social Login Buttons */}
           <div className="mt-4"><SocialLoginButtons mode="register" onClick={handleSocialRegister} /></div>
 
-          {/* Divider */}
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">or</span>
+              <span className="px-2 bg-white text-gray-500">{t("common.OR")}</span>
             </div>
           </div>
 
@@ -90,14 +92,13 @@ export default function SignupPage() {
             <p className="text-sm text-green-600 mb-3 mt-3">{formSuccess}</p>
           )}
 
-          {/* Signup Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <FormField
                 id="pseudo"
-                label="Pseudo"
+                label={t("auth.REGISTER_PSEUDO")}
                 type="text"
-                placeholder="Enter your pseudonyme"
+                placeholder={t("auth.REGISTER_ENTER_PSEUDO")}
                 value={pseudo}
                 onChange={(e) => {
                   setPseudo(e.target.value)
@@ -113,8 +114,8 @@ export default function SignupPage() {
               <FormField
                 id="email"
                 type="email"
-                label="Email"
-                placeholder="Enter your email"
+                label={t("auth.REGISTER_EMAIL")}
+                placeholder={t("auth.REGISTER_ENTER_EMAIL")}
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
@@ -128,10 +129,10 @@ export default function SignupPage() {
 
             <div>
               <FormField
-                label="Password"
+                label={t("auth.REGISTER_PASSWORD")}
                 id="password"
                 type="password"
-                placeholder="Create a password"
+                placeholder={t("auth.REGISTER_CREATE_PASSWORD")}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value)
@@ -145,10 +146,10 @@ export default function SignupPage() {
 
             <div>
               <FormField
-                label="Confirm Password"
+                label={t("auth.REGISTER_CONFIRM_PASSWORD")}
                 id="confirm-password"
                 type="password"
-                placeholder="Confirm your password"
+                placeholder={t("auth.REGISTER_CONFIRM_YOUR_PASSWORD")}
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value)
@@ -165,22 +166,21 @@ export default function SignupPage() {
               isLoading={isLoading}
               disabled={isFormInvalid}
             >
-              Login
+              {t("auth.LOGIN_TITLE")}
             </LoadingButton>
 
             <div className="flex items-center gap-2">
               <span className="ml-2 text-sm text-gray-600">
-                Do you have an account?
+                {t("auth.REGISTER_HAVE_ACCOUNT")}
               </span>
               <Link href={login} className="text-sm text-blue-600 hover:text-blue-500">
-                Log in
+                {t("auth.REGISTER_LOG_IN")}
               </Link>
             </div>
           </form>
         </div>
       </div>
 
-      {/* Right side - Starry Night Background */}
       <StarryBackgroundQuote title="" description="" className="hidden md:flex" />
 
     </div>

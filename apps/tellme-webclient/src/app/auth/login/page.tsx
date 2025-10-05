@@ -2,7 +2,7 @@
 
 import type React from "react"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LoadingButton } from "@/components/ui/loadingButton"
 import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { useNotification } from "@/hooks/useNotification"
@@ -11,10 +11,8 @@ import SocialLoginButtons from "@/components/auth/SocialLoginButton"
 import { REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
 import { login } from "@/lib/rest"
 import type { ApiResponse } from "@/lib"
-
-// import { useAuthStore } from "@/store";
-
 import { useAuth } from '@/hooks/useAuth'
+import { useTranslationStore } from "@/stores/useTranslationStore"
 
 export default function SignInPage() {
   const forgotPassword = "forgot-password"
@@ -27,9 +25,15 @@ export default function SignInPage() {
   const { notification, type, showNotification } = useNotification()
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
   const [formError, setFormError] = useState<string | null>(null);
-
   const [isLoading, setIsLoading] = useState(false)
+  const { t, requireNamespaces, getAllMessages } = useTranslationStore()
 
+  useEffect(() => {
+    (async () => {
+      requireNamespaces(["auth", "common", "messages"]);
+    })();
+  }, []);
+  
   const isFormInvalid =
     !email ||
     !password ||
@@ -39,25 +43,23 @@ export default function SignInPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // if (!email || !password || errors.email || errors.password) return;
     if (isFormInvalid) return;
 
     setIsLoading(true);
-    setFormError(null); // Clear erros
+    setFormError(null);
     let res: ApiResponse;
     try {
       res = await login({ usernameOrEmail: email, password });
 
       if (!res.success) {
-        setFormError(res.data.message || "Incorrect credentials.");
+        setFormError(res.data.message || t("messages.ERROR_INCORRECT_CREDENTIALS"));
         return;
       }
 
-      showNotification("Login réussi, bienvenue " + res.data.user.username);
+      showNotification(t("messages.SUCCESS_LOGIN", { username: res.data.user.username }));
     } catch (err: any) {
-      // networking error or 500
       res = err.response?.data;
-      if (res && res.errors) setFormError(res.errors.message || "An error has occurred. Please try again later.");
+      if (res && res.errors) setFormError(res.errors.message || t("messages.ERROR_GENERIC"));
     } finally {
       setIsLoading(false);
     }
@@ -67,29 +69,17 @@ export default function SignInPage() {
     console.log(`Login with ${provider}`)
   }
 
-  // const { user, loading } = useAuth()
-
   const { user, loading, logout } = useAuth()
   return (
     <div className="min-h-screen flex">
-      {/* <header>
-        {loading ? (
-          <p>Chargement...</p>
-        ) : user ? (
-          <p>Connecté : {user.username}</p>
-        ) : (
-          <p>Invité</p>
-        )}
-      </header> */}
-
       <header>
         {user ? (
           <>
-            <span>Bonjour, {user.username}</span>
-            <button onClick={logout}>Se déconnecter</button>
+            <span>{t("auth.LOGIN_CONNECTED")}, {user.username}</span>
+            <button onClick={logout}>{t("auth.LOGIN_LOGOUT")}</button>
           </>
         ) : (
-          <span>Non connecté</span>
+          <span>{t("auth.LOGIN_NOT_CONNECTED")}</span>
         )}
       </header>
       {notification && (
@@ -98,25 +88,21 @@ export default function SignInPage() {
         </div>
       )}
 
-      {/* Left side - Auth Form */}
       <div className="flex-1 flex flex-col justify-center px-8 py-12 bg-white">
         <div className="mx-auto w-full max-w-sm">
-          {/* Header */}
           <div className="mb-4">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Login</h1>
-            <p className="text-gray-600">Enter to improve your sleep and bring peace to your life</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("auth.LOGIN_TITLE")}</h1>
+            <p className="text-gray-600">{t("auth.LOGIN_DESCRIPTION")}</p>
           </div>
 
-          {/* Social Login Buttons */}
           <div className="mt-4"><SocialLoginButtons mode="login" onClick={handleSocialLogin} /></div>
 
-          {/* Divider */}
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">or</span>
+              <span className="px-2 bg-white text-gray-500">{t("common.OR")}</span>
             </div>
           </div>
 
@@ -124,14 +110,13 @@ export default function SignInPage() {
             <p className="text-sm text-red-600 mb-3 mt-3">{formError}</p>
           )}
 
-          {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <FormField
                 id="email"
                 type="email"
-                label="Email"
-                placeholder="Enter your email"
+                label={t("auth.REGISTER_EMAIL")}
+                placeholder={t("auth.REGISTER_ENTER_EMAIL")}
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
@@ -147,8 +132,8 @@ export default function SignInPage() {
               <FormField
                 id="password"
                 type="password"
-                label="Password"
-                placeholder="Enter your password"
+                label={t("auth.REGISTER_PASSWORD")}
+                placeholder={t("auth.REGISTER_CREATE_PASSWORD")}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value)
@@ -168,38 +153,36 @@ export default function SignInPage() {
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
-                  Remember me
+                  {t("auth.LOGIN_REMEMBER_ME")}
                 </label>
               </div>
               <Link
                 href={forgotPassword}
                 className="text-sm text-blue-600 hover:text-blue-500"
               >
-                Forgot your password?
+                {t("auth.LOGIN_FORGOT_PASSWORD")}
               </Link>
             </div>
-            {/* todo faire un composant button loading  */}
             <LoadingButton
               type="submit"
               isLoading={isLoading}
               disabled={isFormInvalid}
             >
-              Login
+              {t("auth.LOGIN_TITLE")}
             </LoadingButton>
 
             <div className="flex items-center gap-2">
               <span className="ml-2 text-sm text-gray-600">
-                Don't have an account?
+                {t("auth.LOGIN_NO_ACCOUNT")}
               </span>
               <Link href={register} className="text-sm text-blue-600 hover:text-blue-500">
-                Sign up
+                {t("auth.LOGIN_SIGN_UP")}
               </Link>
             </div>
           </form>
         </div>
       </div>
 
-      {/* Right side - Starry Night Background */}
       <StarryBackgroundQuote title="" description="" className="hidden md:flex" />
     </div>
   )

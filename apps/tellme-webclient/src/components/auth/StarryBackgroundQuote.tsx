@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
-import React from "react"
+import React, { useEffect, useState } from "react";
 
 interface StarryBackgroundQuoteProps {
-  title: string
-  description: string
-  className?: string
+  title: string;
+  description: string;
+  className?: string;
+}
+
+interface Star {
+  left: string;
+  top: string;
+  delay: string;
 }
 
 const StarryBackgroundQuote: React.FC<StarryBackgroundQuoteProps> = ({
@@ -13,6 +19,17 @@ const StarryBackgroundQuote: React.FC<StarryBackgroundQuoteProps> = ({
   description,
   className = "",
 }) => {
+  const [stars, setStars] = useState<Star[]>([]);
+
+  useEffect(() => {
+    const generatedStars = Array.from({ length: 50 }, () => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 3}s`,
+    }));
+    setStars(generatedStars);
+  }, []);
+
   return (
     <div className={`flex-1 relative bg-slate-900 overflow-hidden ${className}`}>
       {/* Gradient */}
@@ -20,14 +37,14 @@ const StarryBackgroundQuote: React.FC<StarryBackgroundQuoteProps> = ({
 
       {/* Stars */}
       <div className="absolute inset-0">
-        {[...Array(50)].map((_, i) => (
+        {stars.map((star, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-white rounded-full opacity-80 animate-pulse"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
+              left: star.left,
+              top: star.top,
+              animationDelay: star.delay,
             }}
           />
         ))}
@@ -67,7 +84,7 @@ const StarryBackgroundQuote: React.FC<StarryBackgroundQuoteProps> = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default StarryBackgroundQuote
+export default StarryBackgroundQuote;

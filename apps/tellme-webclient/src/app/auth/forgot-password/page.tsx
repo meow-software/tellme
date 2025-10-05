@@ -1,30 +1,36 @@
 "use client"
 
 import type React from "react"
-
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { useNotification } from "@/hooks/useNotification"
 import { FormField } from "@/components/ui/formField"
 import { validateAuthField } from "@/lib/validation"
+import { useTranslationStore } from "@/stores/useTranslationStore"
 
 const login = "login"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const router = useRouter()
+  const { t, requireNamespaces } = useTranslationStore()
 
+  useEffect(() => {
+    (async () => {
+      requireNamespaces(["auth", "messages"]);
+    })();
+  }, []);
+  
   const { notification, type, showNotification } = useNotification()
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
-
 
   const handleForgotPassword = (e: React.FormEvent) => {
     e.preventDefault()
     if (email) {
-      showNotification("Vous avez reçu un email pour changer votre mot de passe")
+      showNotification(t("messages.SUCCESS_FORGOT_PASSWORD"))
     }
   }
 
@@ -42,9 +48,9 @@ export default function ForgotPasswordPage() {
 
           {/* Title */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
-            <p className="text-gray-600">No worries, every story has its twists.</p>
-            <p className="text-gray-600">Enter your email to receive a password reset link.</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("auth.FORGOT_PASSWORD_TITLE")}</h1>
+            <p className="text-gray-600">{t("auth.FORGOT_PASSWORD_DESCRIPTION_1")}</p>
+            <p className="text-gray-600">{t("auth.FORGOT_PASSWORD_DESCRIPTION_2")}</p>
           </div>
 
           {/* Reset Password Form */}
@@ -53,8 +59,8 @@ export default function ForgotPasswordPage() {
               <FormField
                 id="email"
                 type="email"
-                label="Email"
-                placeholder="Enter your email"
+                label={t("auth.FORGOT_PASSWORD_EMAIL")}
+                placeholder={t("auth.FORGOT_PASSWORD_ENTER_EMAIL")}
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
@@ -69,12 +75,12 @@ export default function ForgotPasswordPage() {
               type="submit"
               className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full"
             >
-              Send Reset Link
+              {t("auth.FORGOT_PASSWORD_SEND_RESET_LINK")}
             </Button>
 
             <div className="text-center">
               <Link href={login} className="text-sm text-blue-600 hover:text-blue-500">
-                Back to login
+                {t("auth.FORGOT_PASSWORD_BACK_TO_LOGIN")}
               </Link>
             </div>
           </form>
@@ -82,7 +88,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* Right side - Starry Night Background */}
-      <StarryBackgroundQuote title="Let’s help you return to your story." description="Forgotten passwords don't mean forgotten dreams." className="hidden md:flex" />
+      <StarryBackgroundQuote title={t("auth.FORGOT_PASSWORD_QUOTE_TITLE")} description={t("auth.FORGOT_PASSWORD_QUOTE_DESCRIPTION")} className="hidden md:flex" />
     </div>
   )
 }

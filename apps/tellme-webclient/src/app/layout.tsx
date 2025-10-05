@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider"
-import { NextIntlClientProvider } from 'next-intl';
+import ClientLayoutI18n from "@/components/providers/clientLayoutI18n";
+import { cookies } from "next/headers";
+import { DEFAULT_LANGUAGE } from "@tellme/core";
+import { loadNamespaceServer } from "@/lib/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,17 +23,22 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let locale = (await cookies()).get('lang')?.value;
+  if (!locale) locale = DEFAULT_LANGUAGE;
+  // const initialMessages = await loadNamespaceServer(locale, 'home');
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextIntlClientProvider>
+        <ClientLayoutI18n locale={locale} timeZone={timeZone} >
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -39,7 +47,7 @@ export default function RootLayout({
           >
             {children}
           </ThemeProvider>
-        </NextIntlClientProvider>
+        </ClientLayoutI18n>
       </body>
     </html>
   );
