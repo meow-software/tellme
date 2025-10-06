@@ -4,33 +4,41 @@ import type React from "react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { useNotification } from "@/hooks/useNotification"
 import { FormField } from "@/components/ui/formField"
 import { validateAuthField } from "@/lib/validation"
 import { useTranslationStore } from "@/stores/useTranslationStore"
+import { ForgotPasswordFormSkeleton } from "./forgot-password-form-skeleton"
+import { LoadingButton } from "@/components/ui/loadingButton"
 
-const login = "login"
+const login = "login";
 
 export function ForgotPasswordForm() {
-  const [email, setEmail] = useState("")
-  const router = useRouter()
-  const { t, requireNamespaces } = useTranslationStore()
-
+  const [email, setEmail] = useState("");
+  const [skeletonLoading, setSkeletonLoading] = useState(true);
+  const router = useRouter();
+  const { t, requireNamespaces } = useTranslationStore();
+  const [btnIsLoading, setBtnIsLoading] = useState(false);
+  const { notification, type, showNotification } = useNotification();
+  const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({});
+  const isFormInvalid = !email || !!errors.email ||btnIsLoading;
+    
   useEffect(() => {
     (async () => {
-      requireNamespaces(["auth", "messages"]);
+      await requireNamespaces(["auth", "messages"]);
+      setSkeletonLoading(false);
     })();
   }, []);
 
-  const { notification, type, showNotification } = useNotification()
-  const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
-
   const handleForgotPassword = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (email) {
-      showNotification(t("messages.SUCCESS_FORGOT_PASSWORD"))
+      showNotification(t("messages.SUCCESS_FORGOT_PASSWORD"));
     }
+  }
+
+  if (skeletonLoading) {
+    return <ForgotPasswordFormSkeleton />
   }
 
   return (
@@ -53,15 +61,16 @@ export function ForgotPasswordForm() {
           }}
           error={errors.email}
           required
+          skeletonLoading={skeletonLoading}
         />
       </div>
 
-      <Button
-        type="submit"
-        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full"
+      <LoadingButton
+        isLoading={btnIsLoading}
+        disabled={isFormInvalid}
       >
         {t("auth.FORGOT_PASSWORD_SEND_RESET_LINK")}
-      </Button>
+      </LoadingButton>
 
       <div className="text-center">
         <Link href={login} className="text-sm text-blue-600 hover:text-blue-500">

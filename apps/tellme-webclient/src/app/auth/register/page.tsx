@@ -1,6 +1,13 @@
-import { RegisterForm } from "@/components/auth/RegisterForm"
-import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
+"use server";
+import { RegisterForm } from "@/components/auth/registerForm"
+import StarryBackgroundQuote from "@/components/auth/starryBackgroundQuote"
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
+
+
+function Loading() {
+  return <h2>🌀 Loading...</h2>;
+}
 
 export default async function SignUpPage() {
   const t = await getTranslations();
@@ -12,7 +19,9 @@ export default async function SignUpPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("auth.REGISTER_TITLE")}</h1>
             <p className="text-gray-600">'{t("auth.REGISTER_DESCRIPTION")}'</p>
           </div>
-          <RegisterForm />
+          <Suspense fallback={<Loading />}>
+            <RegisterForm />
+          </Suspense>
         </div>
       </div>
       <StarryBackgroundQuote title={t("auth.REGISTER_QUOTE_TITLE")} description={t("auth.REGISTER_QUOTE_DESCRIPTION")} className="hidden md:flex" />

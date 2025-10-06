@@ -4,33 +4,35 @@ import type React from "react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { LoadingButton } from "@/components/ui/loadingButton"
-import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { useNotification } from "@/hooks/useNotification"
 import { FormField } from "@/components/ui/formField"
-import SocialLoginButtons from "@/components/auth/SocialLoginButton"
+import SocialLoginButtons from "@/components/auth/socialLoginButton"
 import { REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
 import { login } from "@/lib/rest"
-import type { ApiResponse } from "@/lib"
+import { type ApiResponse } from "@/lib"
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslationStore } from "@/stores/useTranslationStore"
+import { LoginFormSkeleton } from "./login-form-skeleton"
 
 export function LoginForm() {
-  const forgotPassword = "forgot-password"
-  const register = "register"
-  const passwordRegex = REGEX_PASSWORD
-  const mailRegex = REGEX_MAIL
+  const forgotPassword = "forgot-password";
+  const register = "register";
+  const passwordRegex = REGEX_PASSWORD;
+  const mailRegex = REGEX_MAIL;
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const { notification, type, showNotification } = useNotification()
-  const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { notification, type, showNotification } = useNotification();
+  const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false)
-  const { t, requireNamespaces, getAllMessages } = useTranslationStore()
+  const [isLoading, setIsLoading] = useState(false);
+  const [skeletonLoading, setSkeletonLoading] = useState(true);
+  const { t, requireNamespaces, getAllMessages } = useTranslationStore();
 
   useEffect(() => {
     (async () => {
-      requireNamespaces(["auth", "common", "messages"]);
+      await requireNamespaces(["auth", "common", "messages"]);
+      setSkeletonLoading(false)
     })();
   }, []);
 
@@ -81,6 +83,10 @@ export function LoginForm() {
   }
 
   const { user, loading, logout } = useAuth()
+  if (skeletonLoading) {
+    return <LoginFormSkeleton />
+  }
+
   return (
     <>
       {notification && (

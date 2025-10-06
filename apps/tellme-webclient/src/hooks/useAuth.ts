@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAuthStore } from '@/store'
+import { useAuthStore } from '@/stores' 
 
 export const useAuth = () => {
   const {

@@ -1,4 +1,5 @@
 'use client';
+
 import { useTranslations } from 'next-intl';
 import { useTranslationStore } from '@/stores/useTranslationStore';
 import { useEffect, ReactNode } from 'react';

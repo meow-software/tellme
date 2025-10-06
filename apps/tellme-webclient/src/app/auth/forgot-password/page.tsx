@@ -1,5 +1,6 @@
-import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm"
-import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
+"use server";
+import { ForgotPasswordForm } from "@/components/auth/forgotPasswordForm"
+import StarryBackgroundQuote from "@/components/auth/starryBackgroundQuote"
 import { getTranslations } from "next-intl/server";
 
 export default async function ForgotPasswordPage() {

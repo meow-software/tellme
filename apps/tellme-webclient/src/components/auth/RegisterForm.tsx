@@ -2,15 +2,14 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import StarryBackgroundQuote from "@/components/auth/StarryBackgroundQuote"
 import { FormField } from "@/components/ui/formField"
-import SocialLoginButtons from "@/components/auth/SocialLoginButton"
+import SocialLoginButtons from "@/components/auth/socialLoginButton"
 import { REGEX_USERNAME, REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
-import { useNotification } from "@/hooks/useNotification"
 import { register } from "@/lib/rest"
-import type { ApiResponse } from "@/lib"
+import { type ApiResponse } from "@/lib"
 import { LoadingButton } from "@/components/ui/loadingButton"
 import { useTranslationStore } from "@/stores/useTranslationStore"
+import { RegisterFormSkeleton } from "./register-form-skeleton"
 
 export function RegisterForm() {
   const login = "login"
@@ -23,16 +22,17 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [pseudo, setPseudo] = useState("")
 
-  const { notification, type, showNotification } = useNotification()
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false)
+  const [skeletonLoading, setSkeletonLoading] = useState(true)
   const { t, requireNamespaces } = useTranslationStore()
 
   useEffect(() => {
     (async () => {
-      requireNamespaces(["auth", "common"]);
+      await requireNamespaces(["auth", "common"]);
+      setSkeletonLoading(false);
     })();
   }, []);
 
@@ -62,6 +62,10 @@ export function RegisterForm() {
       setIsLoading(false);
     }
   };
+
+  if (skeletonLoading) {
+    return <RegisterFormSkeleton />
+  }
 
   return (
     <>

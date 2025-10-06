@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
+import { FormFieldSkeleton } from './form-field-skeleton'
 interface FormFieldProps {
     id: string
     label: string
@@ -12,6 +13,7 @@ interface FormFieldProps {
     className?: string
     pattern?: RegExp
     error?: string
+    skeletonLoading?: boolean
 }
 export const FormField: React.FC<FormFieldProps> = ({
     id,
@@ -25,9 +27,15 @@ export const FormField: React.FC<FormFieldProps> = ({
     className,
     pattern,
     error,
+    skeletonLoading = false
 }) => {
     const [showPassword, setShowPassword] = useState(false)
     const actualType = isPassword ? (showPassword ? 'text' : 'password') : type
+
+    if (skeletonLoading) return (
+        <FormFieldSkeleton withPasswordToggle={isPassword} />
+    )
+
     return (
         <div className="mb-6">
             <label htmlFor={id} className="block text-sm font-medium mb-2">
