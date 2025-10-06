@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 interface StarryBackgroundQuoteProps {
   title: string;
@@ -19,16 +17,21 @@ const StarryBackgroundQuote: React.FC<StarryBackgroundQuoteProps> = ({
   description,
   className = "",
 }) => {
-  const [stars, setStars] = useState<Star[]>([]);
+  // const [stars, setStars] = useState<Star[]>([]);
 
-  useEffect(() => {
-    const generatedStars = Array.from({ length: 50 }, () => ({
+    const stars = Array.from({ length: 50 }, () => ({
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
       delay: `${Math.random() * 3}s`,
     }));
-    setStars(generatedStars);
-  }, []);
+  // useEffect(() => {
+  //   const generatedStars = Array.from({ length: 50 }, () => ({
+  //     left: `${Math.random() * 100}%`,
+  //     top: `${Math.random() * 100}%`,
+  //     delay: `${Math.random() * 3}s`,
+  //   }));
+  //   setStars(generatedStars);
+  // }, []);
 
   return (
     <div className={`flex-1 relative bg-slate-900 overflow-hidden ${className}`}>

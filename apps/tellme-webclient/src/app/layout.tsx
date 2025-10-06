@@ -3,9 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import ClientLayoutI18n from "@/components/providers/clientLayoutI18n";
-import { cookies } from "next/headers";
-import { DEFAULT_LANGUAGE } from "@tellme/core";
-import { loadNamespaceServer } from "@/lib/i18n";
+import { getLang } from "@/lib/sessions";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,9 +26,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let locale = (await cookies()).get('lang')?.value;
-  if (!locale) locale = DEFAULT_LANGUAGE;
-  // const initialMessages = await loadNamespaceServer(locale, 'home');
+  let locale = await getLang();
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   return (
