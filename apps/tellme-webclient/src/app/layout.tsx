@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import ClientLayoutI18n from "@/components/providers/clientLayoutI18n";
 import { getLang } from "@/lib/sessions";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,11 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster 
+              richColors 
+              closeButton
+              duration={4000}
+            />
           </ThemeProvider>
         </ClientLayoutI18n>
       </body>

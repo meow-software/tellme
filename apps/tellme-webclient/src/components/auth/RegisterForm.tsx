@@ -1,21 +1,27 @@
 "use client"
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { FormField } from "@/components/ui/formField"
-import SocialLoginButtons from "@/components/auth/socialLoginButton"
-import { REGEX_USERNAME, REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
-import { register } from "@/lib/rest"
-import { type ApiResponse } from "@/lib"
-import { LoadingButton } from "@/components/ui/loadingButton"
-import { useTranslationStore } from "@/stores/useTranslationStore"
-import { RegisterFormSkeleton } from "./register-form-skeleton"
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { FormField } from "@/components/ui/formField";
+import SocialLoginButtons from "@/components/auth/socialLoginButton";
+import { REGEX_USERNAME, REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation";
+import { register } from "@/lib/rest";
+import { type ApiResponse } from "@/lib";
+import { LoadingButton } from "@/components/ui/loadingButton";
+import { useTranslationStore } from "@/stores/useTranslationStore";
+import { RegisterFormSkeleton } from "./register-form-skeleton";
+import { toast } from "sonner";
+import { Alert } from "@/components/ui/alert";
+import { useRouter } from "next/navigation";
+
 
 export function RegisterForm() {
-  const login = "login"
-  const passwordRegex = REGEX_PASSWORD
-  const usernameRegex = REGEX_USERNAME
-  const mailRegex = REGEX_MAIL
+  const login = "login";
+  const afterRegister = login;
+  const passwordRegex = REGEX_PASSWORD;
+  const usernameRegex = REGEX_USERNAME;
+  const mailRegex = REGEX_MAIL;
+  const router = useRouter();
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -52,12 +58,16 @@ export function RegisterForm() {
 
     let res: ApiResponse;
     try {
+      console.log("enregistrer", email, pseudo, password);
       res = await register({ email, username: pseudo, password });
-
-      setFormSuccess(res.data.message);
+      console.log(res);
+      // setFormSuccess(res.data.message);
+      toast.success(res.data.message, { duration: 5000 });
+      router.push(afterRegister);
     } catch (err: any) {
       res = err.response?.data;
       if (res && res.errors) setFormError(res.errors.message || t("messages.ERROR_GENERIC"));
+      if (res && res.errors) toast.error(res.errors.message || t("messages.ERROR_GENERIC"));
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +79,6 @@ export function RegisterForm() {
 
   return (
     <>
-
       <div className="mt-4"><SocialLoginButtons mode="register" onClick={handleSocialRegister} /></div>
 
       <div className="relative mb-6">
@@ -82,11 +91,11 @@ export function RegisterForm() {
       </div>
 
       {formError && (
-        <p className="text-sm text-red-600 mb-3 mt-3">{formError}</p>
+        <Alert variant="danger" message={formError} />
       )}
 
       {formSuccess && (
-        <p className="text-sm text-green-600 mb-3 mt-3">{formSuccess}</p>
+        <Alert variant="success" message={formSuccess} />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
