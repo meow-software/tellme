@@ -1,27 +1,33 @@
-"use client"
+"use client";
 
-import type React from "react"
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { LoadingButton } from "@/components/ui/loadingButton"
-import { useNotification } from "@/hooks/useNotification"
-import { FormField } from "@/components/ui/formField"
-import SocialLoginButtons from "@/components/auth/socialLoginButton"
-import { REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation"
-import { login } from "@/lib/rest"
-import { type ApiResponse } from "@/lib"
-import { useAuth } from '@/hooks/useAuth'
-import { useTranslationStore } from "@/stores/useTranslationStore"
-import { LoginFormSkeleton } from "./login-form-skeleton"
+import type React from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { LoadingButton } from "@/components/ui/loadingButton";
+import { useNotification } from "@/hooks/useNotification";
+import { FormField } from "@/components/ui/formField";
+import SocialLoginButtons from "@/components/auth/socialLoginButton";
+import { REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation";
+import { login } from "@/lib/rest";
+import { type ApiResponse } from "@/lib";
+import { useAuth } from '@/hooks/useAuth';
+import { useTranslationStore } from "@/stores/useTranslationStore";
+import { LoginFormSkeleton } from "./login-form-skeleton";
+import { toast } from "sonner";
+import { Alert } from "../ui/alert";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
   const forgotPassword = "forgot-password";
   const register = "register";
+  const afterLogin = "/@me";
   const passwordRegex = REGEX_PASSWORD;
   const mailRegex = REGEX_MAIL;
+  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const { notification, type, showNotification } = useNotification();
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -51,7 +57,8 @@ export function LoginForm() {
     setFormError(null);
     let res: ApiResponse;
     try {
-      res = await login({ usernameOrEmail: email, password });
+      console.log({ usernameOrEmail: email, password, rememberMe})
+      res = await login({ usernameOrEmail: email, password, rememberMe});
 
       if (!res.success) {
         setFormError(res.data.message || t("messages.ERROR_INCORRECT_CREDENTIALS"));
@@ -59,9 +66,12 @@ export function LoginForm() {
       }
 
       showNotification(t("messages.SUCCESS_LOGIN", { username: res.data.user.username }));
+      toast.success(t("messages.SUCCESS_LOGIN", { username: res.data.user.username }));
+      // router.push(afterLogin);
     } catch (err: any) {
       res = err.response?.data;
       if (res && res.errors) setFormError(res.errors.message || t("messages.ERROR_GENERIC"));
+      if (res && res.errors) toast.error(res.errors.message || t("messages.ERROR_GENERIC"));
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +115,7 @@ export function LoginForm() {
       </div>
 
       {formError && (
-        <p className="text-sm text-red-600 mb-3 mt-3">{formError}</p>
+        <Alert variant="danger" message={formError} />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,6 +159,8 @@ export function LoginForm() {
               type="checkbox"
               id="remember"
               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
             />
             <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
               {t("auth.LOGIN_REMEMBER_ME")}

@@ -4,6 +4,7 @@ import { access } from 'fs';
 interface LoginPayload {
   usernameOrEmail: string;
   password: string;
+  rememberMe: boolean;
 }
 
 interface RegisterPayload {
@@ -12,7 +13,7 @@ interface RegisterPayload {
   password: string;
 }
 
-export async function login({ usernameOrEmail, password }: LoginPayload) {
+export async function login({ usernameOrEmail, password, rememberMe }: LoginPayload) {
   const response = await API.post('/auth/login', {
     usernameOrEmail,
     password,

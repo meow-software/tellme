@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { Alert } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 
-
 export function RegisterForm() {
   const login = "login";
   const afterRegister = login;
@@ -43,7 +42,7 @@ export function RegisterForm() {
   }, []);
 
   const handleSocialRegister = (provider: string) => {
-    console.log(`Register with ${provider}`)
+    console.log(`Register with ${provider}`);
   }
 
   const isFormInvalid = !email || !password || !confirmPassword || !pseudo || !!errors.email || !!errors.password || !!errors.confirmPassword || !!errors.pseudo || isLoading;
@@ -58,9 +57,7 @@ export function RegisterForm() {
 
     let res: ApiResponse;
     try {
-      console.log("enregistrer", email, pseudo, password);
       res = await register({ email, username: pseudo, password });
-      console.log(res);
       // setFormSuccess(res.data.message);
       toast.success(res.data.message, { duration: 5000 });
       router.push(afterRegister);
