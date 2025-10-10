@@ -19,7 +19,7 @@ export class CheckLoginHandler implements IQueryHandler<CheckLoginQuery> {
             },
         });
 
-        if (!user || !(await compare(password, user.password))) throw new UnauthorizedException({ code: AuthCodes.INVALID_USER_CREDENTIALS, message: 'Invalid user credentials.' });
+        if (!user || !user.password || !(await compare(password, user.password))) throw new UnauthorizedException({ code: AuthCodes.INVALID_USER_CREDENTIALS, message: 'Invalid user credentials.' });
         return this.usersRepo.pTIUser(user);
     }
 }

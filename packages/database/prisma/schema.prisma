@@ -14,19 +14,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id       BigInt   @id
   username String   @unique
-  password String  
+  password String?  
   email    String?  @unique
   lang     String   @db.Char(2) @default("en")
   isConfirmed Boolean @default(false)
   bot Bot?
+  providers   UserProvider[]  // relations avec Google, GitHub...
 }
 
 model Bot {
   id    BigInt @id
   token String
   user  User   @relation(fields: [id], references: [id])
+}
+
+enum AuthProvider {
+  google
+  facebook
+}
+
+model UserProvider {
+  id          BigInt   @id
+  provider    AuthProvider   // "google", "github", "facebook"
+  providerId  String   // l’ID unique renvoyé par le provider (sub Google, id GitHub...)
+  userId      BigInt
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId]) // pour éviter doublons
 }

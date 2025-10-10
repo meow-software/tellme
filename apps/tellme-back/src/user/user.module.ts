@@ -18,6 +18,7 @@ import { CheckLoginBotHandler } from './cqrs/queries/handler/check-login-bot.han
 import { CheckLoginHandler } from './cqrs/queries/handler/check-login.handler';
 import { SearchUsersHandler } from './cqrs/queries/handler/search-users.handler';
 import { UpdateUserPasswordHandler } from './cqrs/commands/handlers/update-user-password.handler';
+import { GetOrCreateOauthUserHandler } from './cqrs/commands/handlers/get-or-create-oauth-user.handler';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { UpdateUserPasswordHandler } from './cqrs/commands/handlers/update-user-
     // CQRS
     // Commands
     CreateUserHandler,
+    GetOrCreateOauthUserHandler,
     DeleteUserHandler,
     UpdateUserHandler,
     UpdateUserPasswordHandler,

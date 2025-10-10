@@ -8,3 +8,6 @@ export * from './refresh-auth.guard';
 export * from './csrf-auth.guard';
 export * from './request';
 export * from './jwt-csrf-auth.guard';
+export * from './providers/oauth-provider.interface';
+export * from './providers/google.provider';
+export * from './providers/social.provider';

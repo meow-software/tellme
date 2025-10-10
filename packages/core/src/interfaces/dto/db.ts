@@ -13,4 +13,16 @@ export interface IUserDto {
   email: string | null; 
   isConfirmed: boolean;
   bot?: IBotDto;
+  lang: string;
+  providers?: IProviderDto[];
+}
+
+export const PROVIDERS = ['google' ,'facebook'] as const;
+export type Provider = typeof PROVIDERS[number];
+
+export interface IProviderDto{
+  id: Snowflake;
+  provider: Provider | null;
+  providerId: string;
+  user?: IUserDto;
 }

@@ -1,6 +1,7 @@
-import { IUserDto, IBotDto, Snowflake } from "./../../../lib/core";
+import { IUserDto, IBotDto, Snowflake, IProviderDto } from "./../../../lib/core";
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { BotDTO } from "./bot.dto";
+import { ProviderDTO } from "./providers";
 
 export class UserDTO implements IUserDto{
   @Expose()
@@ -25,4 +26,8 @@ export class UserDTO implements IUserDto{
   @Expose()
   @Type(() => BotDTO)
   bot?: IBotDto;
+
+  @Expose()
+  @Type(() => ProviderDTO)
+  providers?: IProviderDto[];
 }

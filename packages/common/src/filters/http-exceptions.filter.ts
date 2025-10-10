@@ -6,7 +6,14 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ApiResponse, ResponseUtil } from '..';
+import { ApiResponse, ResponseUtil, ServerCode } from '..';
+
+interface ErrorWithCode {
+  statusCode: number;
+  code?: string;
+  message?: string;
+  [key: string]: any;
+} 
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -26,11 +33,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       errorResponse = {error: errorResponse}
     }
     
-
+    let errors : ErrorWithCode =  {...errorResponse, statusCode: status};
+    if (!!errors.code) {
+      errors.code = ServerCode.UNKNOW;
+    }
+    
     // Build standardized error response
     const apiResponse: ApiResponse<null> = ResponseUtil.catch(
       {
-        errors: {...errorResponse, statusCode: status},
+        errors: errors,
         message:
           // (errorResponse as any)?.message ||
           // exception.message ||

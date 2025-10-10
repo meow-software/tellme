@@ -17,11 +17,10 @@ export async function loadNamespaceServer(
             if (!ns) return; // ignore empty namespace
 
             if (!localeCache[locale][ns]) {
-                console.log("--exec")
                 const filePath = path.join(process.cwd(), 'public', 'locales', locale, `${ns}.json`);
                 const data = JSON.parse(await fs.readFile(filePath, 'utf-8'));
                 localeCache[locale][ns] = data;
-            }else console.log("--cache")
+            }
 
             loadedNamespaces[ns] = localeCache[locale][ns];
         })

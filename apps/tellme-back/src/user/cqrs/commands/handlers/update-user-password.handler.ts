@@ -12,7 +12,7 @@ export class UpdateUserPasswordHandler implements ICommandHandler<UpdateUserPass
 
   async execute(command: UpdateUserPasswordCommand) {
     const user = await this.userRepository.raw.findFirst({ where: { id : BigInt(command.userId) }});
-    if (!user) throw new BadRequestException({ code: AuthCodes.NOT_FOUND, message: 'User not found' });
+    if (!user || !user.password) throw new BadRequestException({ code: AuthCodes.NOT_FOUND, message: 'User not found' });
     if (await compare( command.oldPassword, user.password)) throw new BadRequestException({ code: AuthCodes.INVALID_OLD_PASSWORD, message: 'Invalid old password' });
 
     // Hash password

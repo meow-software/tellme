@@ -8,6 +8,9 @@ export enum AppCodes {
 export enum HealthCodes {
   STATUS_OK = "HEALTH.STATUS_OK"
 }
+export enum ServerCode {
+  UNKNOW = "SERVER.UNKNOW"
+}
 
 export enum AuthCodes {
   TOKEN_REQUIRED = "AUTH.TOKEN_REQUIRED",
@@ -50,6 +53,8 @@ export interface ITranslationKeys {
   HEALTH_CODES: typeof HealthCodes;
   AUTH_CODES: typeof AuthCodes;
   EMAIL_CODES: typeof EmailCodes;
+  SERVER_CODES: typeof ServerCode;
+
 }
 
 export function getNamespace(code: string) {

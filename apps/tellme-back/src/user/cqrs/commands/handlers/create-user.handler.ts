@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CreateUserCommand } from '../create-user.command';
 import { ConflictException, Inject } from '@nestjs/common';
-import { UserRepository } from 'src/lib/database';
+import { handlePrismaError, UserRepository } from 'src/lib/database';
 import { EB, EVENT_BUS, hash, type IEventBus, SnowflakeService, AuthCodes } from 'src/lib/common';
 
 @CommandHandler(CreateUserCommand)
@@ -29,6 +29,8 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
     } catch (e) {
       if (e.code === 'P2002') {
         throw new ConflictException({ code: AuthCodes.USERNAME_OR_EMAIL_EXISTS, message: 'Username or email already exists.' });
+      } else {
+        handlePrismaError(e);
       }
     }
     await this.eventBus.publish(EB.CHANNEL.USER, {

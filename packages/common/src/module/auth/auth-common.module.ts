@@ -6,10 +6,12 @@ import { JwtService } from './jwt.service';
 import { RefreshTokenGuard } from './refresh-auth.guard';
 import { JwtCsrfGuard } from './jwt-csrf-auth.guard';
 import { CsrfGuard } from './csrf-auth.guard';
+import { GoogleProvider } from './providers/google.provider';
+import { SocialProvider } from './providers/social.provider';
 
 
 @Module({
   imports: [PassportModule.register({ defaultStrategy: 'jwt' })],
-  providers: [JwtStrategy, JwtAuthGuard, JwtService, CsrfGuard, RefreshTokenGuard, JwtCsrfGuard],
-  exports: [PassportModule, JwtStrategy, JwtAuthGuard, JwtService, CsrfGuard, RefreshTokenGuard, JwtCsrfGuard],})
+  providers: [JwtStrategy, JwtAuthGuard, JwtService, CsrfGuard, RefreshTokenGuard, JwtCsrfGuard, GoogleProvider, SocialProvider],
+  exports: [PassportModule, JwtStrategy, JwtAuthGuard, JwtService, CsrfGuard, RefreshTokenGuard, JwtCsrfGuard,GoogleProvider, SocialProvider],})
 export class AuthCommonModule {}

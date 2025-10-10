@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { IUserService, UserDTO, RegisterDto, LoginDto, UpdateUserDto, Snowflake, AuthCodes, IAuthenticatedRequest } from 'src/lib/common';
+import { IUserService, UserDTO, RegisterDto, LoginDto, UpdateUserDto, Snowflake, AuthCodes, IAuthenticatedRequest, OAuthUserPayload } from 'src/lib/common';
 import { FindUserByIdQuery } from './cqrs/queries/find-user-by-id.query';
 import { CreateUserCommand } from './cqrs/commands/create-user.command';
 import { CheckLoginQuery } from './cqrs/queries/check-login.query';
@@ -8,6 +8,7 @@ import { UpdateUserPasswordCommand } from './cqrs/commands/update-user-password.
 import { CheckLoginBotQuery } from './cqrs/queries/check-login-bot.query';
 import { UpdateUserCommand } from './cqrs/commands/update-user.command';
 import { SearchUsersQuery } from './cqrs/queries/search-users.query';
+import { GetOrCreateOauthUserCommand } from './cqrs/commands/get-or-create-oauth-user.command';
 
 /**
  * UserService is the concrete implementation of IUserService.
@@ -121,5 +122,16 @@ export class UserService implements IUserService {
    */
   async searchUsers(term: string, ctx: any = {}): Promise<UserDTO[]> {
     return await this.queryBus.execute(new SearchUsersQuery(term));
+  }
+  
+  /**
+   * Creates or retrieves a user based on OAuth provider login.
+   * @param oauthUserPayload - Payload containing OAuth user information
+   * @returns The existing or newly created UserDTO
+   */
+  async getOrCreateOauthUser(oauthUserPayload: OAuthUserPayload) : Promise<UserDTO> {
+    return await this.commandBus.execute(
+      new GetOrCreateOauthUserCommand(oauthUserPayload),
+    );
   }
 }

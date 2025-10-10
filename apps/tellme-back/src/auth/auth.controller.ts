@@ -1,11 +1,16 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthCodes, ClientCredentialsDto, JwtAuthGuard, LoginDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto, RefreshTokenGuard, type IAuthenticatedRequest } from 'src/lib/common';
+import { AuthCodes, ClientCredentialsDto, JwtAuthGuard, LoginDto, RegisterDto, ResendConfirmationDto, ResetPasswordConfirmationDto, ResetPasswordDemandDto, RefreshTokenGuard, type IAuthenticatedRequest, SocialProviderDto } from 'src/lib/common';
 import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
+    
+    @Post('social')
+    async socialProvider(@Body() dto: SocialProviderDto) {
+        return this.authService.checkSocialProvider(dto); 
+    }
 
     @Post('register')
     async register(@Body() dto: RegisterDto, @Req() req: IAuthenticatedRequest) {

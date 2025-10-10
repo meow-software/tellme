@@ -1,6 +1,6 @@
 import { Snowflake } from './../lib/core';
 import { LoginDto, RegisterDto, UpdateUserDto, UserDTO } from '../dto';
-import { IAuthenticatedRequest } from '../module';
+import { IAuthenticatedRequest, OAuthUserPayload } from '../module';
 
 export const USER_SERVICE = Symbol('USER_SERVICE');
 
@@ -9,6 +9,7 @@ export interface IUserService {
   registerUser(dto: RegisterDto, req:IAuthenticatedRequest): Promise<UserDTO>;
   checkLogin(dto: LoginDto): Promise<UserDTO | null>;
   checkBotLogin(id:  Snowflake | bigint, token: string): Promise<UserDTO | null>;
+  getOrCreateOauthUser(oauthUserPayload: OAuthUserPayload): Promise<UserDTO>;
   getMe(req: IAuthenticatedRequest): Promise<UserDTO | null>;
   updatePassword(id:  Snowflake | bigint, password: string, oldPassword: string, ctx: object): Promise<any>;
   patchMe(dto: UpdateUserDto, ctx: any): Promise<UserDTO>; 

@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken, validateCsrfToken, AuthCodes, IAuthenticatedRequest, IRequest } from 'src/lib/common';
+import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken, validateCsrfToken, AuthCodes, IAuthenticatedRequest, IRequest, SocialProviderDto, SocialProvider, OAuthUserPayload } from 'src/lib/common';
 
 @Injectable()
 export class AuthService extends AuthServiceAbstract {
@@ -9,6 +9,7 @@ export class AuthService extends AuthServiceAbstract {
         @Inject(REDIS_AUTH_SERVICE) private readonly redisAuthService: IRedisAuthService,
         @Inject(USER_SERVICE) private readonly userService: IUserService,
         @Inject(EVENT_BUS) protected readonly eventBus: IEventBus,
+        private readonly socialProvider: SocialProvider
     ) {
         super(jwt, redisAuthService, eventBus);
     }
@@ -17,18 +18,37 @@ export class AuthService extends AuthServiceAbstract {
         return this.userService.findById(id);
     }
 
+    async checkSocialProvider(dto: SocialProviderDto) {
+        const oauthUser = await this.socialProvider.validateSocialToken(dto.provider, dto.token);
+        // le compte doit etre verified
+
+        if (!!oauthUser.email || !!oauthUser.username) return {"error" : "error"};
+
+        // get or create user by provider
+        let user = await this.userService.getOrCreateOauthUser(
+            {
+                ...oauthUser as OAuthUserPayload,
+            },
+        );
+        console.log(user);
+        // createOAuthUser;
+
+        // on peut generer son jwt
+        return {user}
+    }
+
     /**
      * Register: delegates user creation to the USER_SERVICE,
      * then issues an access/refresh token pair.
      */
-    async registerUser(dto: RegisterDto, req:IAuthenticatedRequest) {
+    async registerUser(dto: RegisterDto, req: IAuthenticatedRequest) {
         const user = await this.userService.registerUser(dto, req) as UserDTO;
         if (!user) throw new BadRequestException({
             code: AuthCodes.INVALID_CREDENTIALS,
             message: 'User registration failed.'
         })
         if (user.email) this.sendEmailConfirmation(user.id, user);
-        return {code: AuthCodes.CHECK_EMAIL_CONFIRMATION, message: "Check your email to confirm your account." };
+        return { code: AuthCodes.CHECK_EMAIL_CONFIRMATION, message: "Check your email to confirm your account." };
     }
 
     async confirmRegister(token: string, req: IAuthenticatedRequest) {
@@ -174,7 +194,7 @@ export class AuthService extends AuthServiceAbstract {
     /**
      * Reset password demand
      */
-    async resetPasswordDemand(userId: Snowflake,  req: IAuthenticatedRequest ) {
+    async resetPasswordDemand(userId: Snowflake, req: IAuthenticatedRequest) {
         const user = await this.userService.getMe(req) as UserDTO;
         if (!user) throw new BadRequestException({
             code: AuthCodes.NO_USER_WITH_EMAIL,
