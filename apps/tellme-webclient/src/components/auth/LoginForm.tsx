@@ -9,7 +9,7 @@ import { FormField } from "@/components/ui/formField";
 import SocialLoginButtons from "@/components/auth/socialLoginButton";
 import { REGEX_PASSWORD, REGEX_MAIL, validateAuthField } from "@/lib/validation";
 import { login } from "@/lib/rest";
-import { type ApiResponse } from "@/lib";
+import { splitCode, type ApiResponse } from "@/lib";
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslationStore } from "@/stores/useTranslationStore";
 import { LoginFormSkeleton } from "./login-form-skeleton";
@@ -37,7 +37,7 @@ export function LoginForm() {
 
   useEffect(() => {
     (async () => {
-      await requireNamespaces(["auth", "common", "messages"]);
+      await requireNamespaces(["auth", "common"]);
       setSkeletonLoading(false)
     })();
   }, []);
@@ -57,8 +57,8 @@ export function LoginForm() {
     setFormError(null);
     let res: ApiResponse;
     try {
-      console.log({ usernameOrEmail: email, password, rememberMe})
-      res = await login({ usernameOrEmail: email, password, rememberMe});
+      console.log({ usernameOrEmail: email, password, rememberMe })
+      res = await login({ usernameOrEmail: email, password, rememberMe });
 
       if (!res.success) {
         setFormError(res.data.message || t("messages.ERROR_INCORRECT_CREDENTIALS"));
@@ -70,8 +70,19 @@ export function LoginForm() {
       // router.push(afterLogin);
     } catch (err: any) {
       res = err.response?.data;
-      if (res && res.errors) setFormError(res.errors.message || t("messages.ERROR_GENERIC"));
-      if (res && res.errors) toast.error(res.errors.message || t("messages.ERROR_GENERIC"));
+      console.log(res);
+      if (res && res.errors) {
+        if (res.errors.code) {
+          const { namespace, key } = splitCode(res.errors.code);
+          console.log("----ncode", namespace, key);
+          setFormError(t(`${namespace}.${key}`));
+          toast.error(t(`${namespace}.${key}`));
+        } else {
+          if (res && res.errors) setFormError(res.errors.message || t("messages.ERROR_GENERIC"));
+          if (res && res.errors) toast.error(res.errors.message || t("messages.ERROR_GENERIC"));
+        }
+
+      }
     } finally {
       setIsLoading(false);
     }

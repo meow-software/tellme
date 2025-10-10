@@ -1,6 +1,0 @@
-{
-  "ERROR_GENERIC": "An error has occurred. Please try again later.",
-  "ERROR_INCORRECT_CREDENTIALS": "Incorrect credentials.",
-  "SUCCESS_LOGIN": "Login successful, welcome {username}",
-  "SUCCESS_FORGOT_PASSWORD": "You have received an email to change your password"
-}

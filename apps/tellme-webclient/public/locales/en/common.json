@@ -1,3 +1,5 @@
 {
-  "OR": "or"
+  "OR": "or",
+  "ERROR_GENERIC": "An error has occurred. Please try again later.",
+  "ERROR_INCORRECT_CREDENTIALS": "Incorrect credentials."
 }

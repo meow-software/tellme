@@ -1,3 +1,5 @@
 {
-  "OR": "ou"
+  "OR": "ou",
+  "ERROR_GENERIC": "Une erreur est survenue. Veuillez réessayer plus tard.",
+  "ERROR_INCORRECT_CREDENTIALS": "Identifiants incorrects."
 }

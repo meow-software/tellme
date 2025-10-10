@@ -25,7 +25,7 @@ export function ForgotPasswordForm() {
     
   useEffect(() => {
     (async () => {
-      await requireNamespaces(["auth", "messages"]);
+      await requireNamespaces(["auth"]);
       setSkeletonLoading(false);
     })();
   }, []);

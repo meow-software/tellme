@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException } from '@nestjs/common';
 import { UserRepository } from 'src/lib/database';
-import { compare, hash, UserErrors, UserSuccess } from 'src/lib/common';
+import { compare, hash, AuthCodes } from 'src/lib/common';
 import { UpdateUserPasswordCommand } from '../update-user-password.command';
 
 @CommandHandler(UpdateUserPasswordCommand)
@@ -12,8 +12,8 @@ export class UpdateUserPasswordHandler implements ICommandHandler<UpdateUserPass
 
   async execute(command: UpdateUserPasswordCommand) {
     const user = await this.userRepository.raw.findFirst({ where: { id : BigInt(command.userId) }});
-    if (!user) throw new BadRequestException({ code: UserErrors.NOT_FOUND, message: 'User not found' });
-    if (await compare( command.oldPassword, user.password)) throw new BadRequestException({ code: UserErrors.INVALID_OLD_PASSWORD, message: 'Invalid old password' });
+    if (!user) throw new BadRequestException({ code: AuthCodes.NOT_FOUND, message: 'User not found' });
+    if (await compare( command.oldPassword, user.password)) throw new BadRequestException({ code: AuthCodes.INVALID_OLD_PASSWORD, message: 'Invalid old password' });
 
     // Hash password
     const hashedPassword = await hash(command.password, Number(process.env.PASSWORD_SALT_ROUNDS) ?? 10);
@@ -21,6 +21,6 @@ export class UpdateUserPasswordHandler implements ICommandHandler<UpdateUserPass
     this.userRepository.update(user.id, {
       password: hashedPassword,
     });
-    return {edited: true, code: UserSuccess.PASSWORD_UPDATED, message: 'Password updated successfully!'};
+    return {edited: true, code: AuthCodes.PASSWORD_UPDATED, message: 'Password updated successfully!'};
   }
 }

@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken, validateCsrfToken, AuthErrors, AuthSuccess, IAuthenticatedRequest, IRequest } from 'src/lib/common';
+import { type IRedisAuthService, REDIS_AUTH_SERVICE, USER_SERVICE, type IUserService, type UserDTO, EVENT_BUS, type IEventBus, JwtService, AuthServiceAbstract, RegisterDto, UserPayload, Snowflake, LoginDto, RefreshPayload, getRefreshWindowSeconds, ResetPasswordConfirmationDto, BotDTO, buildRedisCacheKeyUserSession, generateCsrfToken, validateCsrfToken, AuthCodes, IAuthenticatedRequest, IRequest } from 'src/lib/common';
 
 @Injectable()
 export class AuthService extends AuthServiceAbstract {
@@ -24,11 +24,11 @@ export class AuthService extends AuthServiceAbstract {
     async registerUser(dto: RegisterDto, req:IAuthenticatedRequest) {
         const user = await this.userService.registerUser(dto, req) as UserDTO;
         if (!user) throw new BadRequestException({
-            code: AuthErrors.INVALID_CREDENTIALS,
+            code: AuthCodes.INVALID_CREDENTIALS,
             message: 'User registration failed.'
         })
         if (user.email) this.sendEmailConfirmation(user.id, user);
-        return {code: AuthErrors.CHECK_EMAIL_CONFIRMATION, message: "Check your email to confirm your account." };
+        return {code: AuthCodes.CHECK_EMAIL_CONFIRMATION, message: "Check your email to confirm your account." };
     }
 
     async confirmRegister(token: string, req: IAuthenticatedRequest) {
@@ -39,18 +39,18 @@ export class AuthService extends AuthServiceAbstract {
         const user = await this.userService.findById(id) as UserDTO;
 
         if (!user) throw new BadRequestException({
-            code: AuthErrors.NO_USER_WITH_ID,
+            code: AuthCodes.NO_USER_WITH_ID,
             message: "No user found with this id."
         });
         if (user.isConfirmed) {
             throw new BadRequestException({
-                code: AuthErrors.ACCOUNT_ALREADY_CONFIRMED,
+                code: AuthCodes.ACCOUNT_ALREADY_CONFIRMED,
                 message: "Account already confirmed."
             });
         }
 
         if (user.email) this.sendEmailConfirmation(user.id, user);
-        return { success: true, code: AuthSuccess.CONFIRMATION_EMAIL_RESENT, message: "Confirmation email resent." };
+        return { success: true, code: AuthCodes.CONFIRMATION_EMAIL_RESENT, message: "Confirmation email resent." };
     }
 
 
@@ -63,14 +63,14 @@ export class AuthService extends AuthServiceAbstract {
 
         if (!user) {
             throw new UnauthorizedException({
-                code: AuthErrors.INVALID_CREDENTIALS,
+                code: AuthCodes.INVALID_CREDENTIALS,
                 message: 'Invalid credentials.'
             });
         }
         if (!user.isConfirmed) {
             if (user.email) this.sendEmailConfirmation(user.id, user);
             throw new UnauthorizedException({
-                code: AuthErrors.ACCOUNT_NOT_CONFIRMED,
+                code: AuthCodes.ACCOUNT_NOT_CONFIRMED,
                 message: 'Account not confirmed, confirmation email resent.'
             });
         }
@@ -114,7 +114,7 @@ export class AuthService extends AuthServiceAbstract {
             decodedRefresh = await this.verifyRefresh(refreshToken);
         } catch {
             throw new UnauthorizedException({
-                code: AuthErrors.INVALID_OR_EXPIRED_REFRESH_TOKEN,
+                code: AuthCodes.INVALID_OR_EXPIRED_REFRESH_TOKEN,
                 message: 'Invalid or expired refresh token.'
             });
         }
@@ -129,14 +129,14 @@ export class AuthService extends AuthServiceAbstract {
         const session = await this.redisAuthService.getJSON(redisKey);
         if (!session) {
             throw new UnauthorizedException({
-                code: AuthErrors.REFRESH_TOKEN_INVALID_OR_REVOKED,
+                code: AuthCodes.REFRESH_TOKEN_INVALID_OR_REVOKED,
                 message: 'Refresh token is invalid or has been revoked.'
             });
         }
         // 3) Validate CSRF token against refresh token's JTI
         if (!validateCsrfToken(xCsrfToken, decodedRefresh.jti)) {
             throw new ForbiddenException({
-                code: AuthErrors.INVALID_CSRF_TOKEN,
+                code: AuthCodes.INVALID_CSRF_TOKEN,
                 message: 'Invalid CSRF token.'
             });
         }
@@ -177,17 +177,17 @@ export class AuthService extends AuthServiceAbstract {
     async resetPasswordDemand(userId: Snowflake,  req: IAuthenticatedRequest ) {
         const user = await this.userService.getMe(req) as UserDTO;
         if (!user) throw new BadRequestException({
-            code: AuthErrors.NO_USER_WITH_EMAIL,
+            code: AuthCodes.NO_USER_WITH_EMAIL,
             message: "No user found with this email."
         });
         if (!user.email) throw new BadRequestException({
-            code: AuthErrors.USER_HAS_NO_EMAIL,
+            code: AuthCodes.USER_HAS_NO_EMAIL,
             message: "User has no email, i can't help you."
         });
 
         this.sendEmailResetPassword(user.id, user.email, req.userlang);
 
-        return { success: true, code: AuthSuccess.PASSWORD_RESET_LINK_SENT, message: "Password reset link sent to your email!" };
+        return { success: true, code: AuthCodes.PASSWORD_RESET_LINK_SENT, message: "Password reset link sent to your email!" };
     }
 
     /**
@@ -197,7 +197,7 @@ export class AuthService extends AuthServiceAbstract {
         // 1. Check OTP
         const match = this.checkOTP(dto.code);
         if (!match) throw new UnauthorizedException({
-            code: AuthErrors.INVALID_EXPIRED_TOKEN,
+            code: AuthCodes.INVALID_EXPIRED_TOKEN,
             message: "Invalid or expired token!"
         });
 
@@ -218,7 +218,7 @@ export class AuthService extends AuthServiceAbstract {
                 // Refresh already invalid → ignore
             }
         }
-        return { code: AuthSuccess.LOGGED_OUT, message: 'You have been logged out.' };
+        return { code: AuthCodes.LOGGED_OUT, message: 'You have been logged out.' };
     }
 
     /**
@@ -232,7 +232,7 @@ export class AuthService extends AuthServiceAbstract {
         console.log("----l", id, token)
         const bot: UserDTO | null = await this.userService.checkBotLogin(id, token);
         if (!bot) throw new UnauthorizedException({
-            code: AuthErrors.INVALID_BOT_CREDENTIALS,
+            code: AuthCodes.INVALID_BOT_CREDENTIALS,
             message: 'Invalid bot credentials.'
         });
         return this.generateJwtForBot({
