@@ -59,7 +59,7 @@ export function LoginForm() {
     try {
       console.log({ usernameOrEmail: email, password, rememberMe })
       res = await login({ usernameOrEmail: email, password, rememberMe });
-
+      
       if (!res.success) {
         setFormError(res.data.message || t("messages.ERROR_INCORRECT_CREDENTIALS"));
         return;
@@ -115,7 +115,7 @@ export function LoginForm() {
           {notification}
         </div>
       )}
-      <div className="mt-4"><SocialLoginButtons mode="login" onClick={handleSocialLogin} /></div>
+      <div className="mt-4"><SocialLoginButtons t={t} code="auth.SIGN_IN_WITH" onClick={handleSocialLogin} /></div>
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-300" />

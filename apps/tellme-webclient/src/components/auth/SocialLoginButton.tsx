@@ -4,15 +4,16 @@ import { Button } from '@/components/ui/button'
 type Provider = 'google' | 'facebook'
 
 interface SocialLoginButtonsProps {
-    mode?: 'login' | 'register'
     onClick?: (provider: Provider) => void
+    t : Function,
+    code: string
 }
 
 const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({
-    mode = 'login',
     onClick,
+    t,
+    code
 }) => {
-    const label = mode === 'login' ? 'Sign in with' : 'Sign up with'
 
     return (
         <div className="space-y-3 mb-6">
@@ -51,7 +52,7 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({
             3.3-4.53 6.16-4.53z"
                     />
                 </svg>
-                {label} Google
+                {t(code, {"provider" : "Google"})}
             </Button>
 
             {/* Facebook */}
@@ -70,7 +71,7 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({
           3.47h-2.796v8.385C19.612 23.027 
           24 18.062 24 12.073z" />
                 </svg>
-                {label} Facebook
+                {t(code, {"provider" : "Facebook"})}
             </Button>
         </div>
     )

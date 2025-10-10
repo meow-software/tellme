@@ -76,7 +76,7 @@ export function RegisterForm() {
 
   return (
     <>
-      <div className="mt-4"><SocialLoginButtons mode="register" onClick={handleSocialRegister} /></div>
+      <div className="mt-4"><SocialLoginButtons t={t} code="auth.SIGN_UP_WITH"  onClick={handleSocialRegister} /></div>
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">

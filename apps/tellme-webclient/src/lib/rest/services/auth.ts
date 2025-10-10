@@ -1,5 +1,4 @@
-import { API } from '@/lib';
-import { access } from 'fs';
+import { API, ApiResponse } from '@/lib';
 
 interface LoginPayload {
   usernameOrEmail: string;
@@ -13,7 +12,7 @@ interface RegisterPayload {
   password: string;
 }
 
-export async function login({ usernameOrEmail, password, rememberMe }: LoginPayload) {
+export async function login({ usernameOrEmail, password, rememberMe }: LoginPayload) : Promise<ApiResponse> {
   const response = await API.post('/auth/login', {
     usernameOrEmail,
     password,
